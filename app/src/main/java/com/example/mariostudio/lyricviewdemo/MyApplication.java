@@ -1,6 +1,8 @@
-package com.example.mariostudio.customviewdemo;
+package com.example.mariostudio.lyricviewdemo;
 
 import android.app.Application;
+
+import com.example.mariostudio.lyricviewdemo.Content;
 
 import java.io.File;
 

@@ -1,4 +1,4 @@
-package com.example.mariostudio.customviewdemo;
+package com.example.mariostudio.lyricviewdemo;
 
 /**
  * Created by WuLiFei on 2016/7/18.

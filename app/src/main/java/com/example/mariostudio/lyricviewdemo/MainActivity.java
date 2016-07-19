@@ -1,4 +1,4 @@
-package com.example.mariostudio.customviewdemo;
+package com.example.mariostudio.lyricviewdemo;
 
 import android.annotation.TargetApi;
 import android.media.MediaPlayer;
@@ -11,7 +11,6 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
-import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 

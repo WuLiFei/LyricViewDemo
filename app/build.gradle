@@ -5,9 +5,9 @@ android {
     buildToolsVersion "24.0.0"
 
     defaultConfig {
-        applicationId "com.example.mariostudio.customviewdemo"
-        minSdkVersion 14
+        applicationId "com.example.mariostudio.lyricviewdemo"
         targetSdkVersion 23
+        minSdkVersion 14
         versionCode 1
         versionName "1.0"
     }

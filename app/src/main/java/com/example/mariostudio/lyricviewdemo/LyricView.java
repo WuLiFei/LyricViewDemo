@@ -1,4 +1,4 @@
-package com.example.mariostudio.customviewdemo;
+package com.example.mariostudio.lyricviewdemo;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
