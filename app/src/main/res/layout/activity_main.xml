@@ -1,0 +1,117 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:background="@mipmap/m_img_loading"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:orientation="vertical" >
+
+    <View
+        android:layout_width="match_parent"
+        android:id="@android:id/custom"
+        android:layout_height="0dp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="64dp" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="6dp" >
+
+        <com.example.mariostudio.customviewdemo.LyricView
+            android:id="@+id/lyric_view"
+            android:layout_height="match_parent"
+            android:layout_width="match_parent" />
+
+        <TextView
+            android:layout_height="match_parent"
+            android:layout_width="match_parent"
+            android:id="@android:id/empty"
+            android:textColor="#FFFFFF"
+            android:visibility="gone"
+            android:gravity="center"
+            android:textSize="16sp"
+            android:text="暂无歌词" />
+
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_margin="12dp"
+            android:id="@android:id/icon"
+            android:contentDescription="@null"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentBottom="true"
+            android:src="@mipmap/icon_lyric_setting" />
+    </RelativeLayout>
+
+    <LinearLayout
+        android:padding="3dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <TextView
+            android:text="--:--"
+            android:padding="6dp"
+            android:gravity="left"
+            android:textColor="#16BC5C"
+            android:id="@android:id/text1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <SeekBar
+            android:paddingTop="3dp"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:paddingBottom="3dp"
+            android:progressDrawable="@drawable/layer_player_playing_progress"
+            android:thumb="@mipmap/player_seekbar_playback_thumb"
+            android:id="@android:id/progress"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:maxHeight="2.0dip"
+            android:minHeight="2.0dip" />
+
+        <TextView
+            android:text="--:--"
+            android:padding="6dp"
+            android:gravity="right"
+            android:textColor="#ECF0F1"
+            android:id="@android:id/text2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:gravity="center"
+        android:padding="24dp" >
+
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:id="@android:id/button1"
+            android:contentDescription="@null"
+            android:src="@mipmap/m_icon_player_previous_normal" />
+
+        <ImageView
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:id="@android:id/button2"
+            android:layout_marginLeft="32dp"
+            android:layout_marginRight="32dp"
+            android:contentDescription="@null"
+            android:src="@mipmap/m_icon_player_pause_normal" />
+
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:id="@android:id/button3"
+            android:contentDescription="@null"
+            android:src="@mipmap/m_icon_player_next_normal" />
+    </LinearLayout>
+</LinearLayout>

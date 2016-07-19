@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">CustomViewDemo</string>
+    <string name="action_settings">Settings</string>
+
+
+    <string-array name="song_names" >
+        <item >一个人的北京 - 好妹妹乐队</item>
+        <item >小孩 - 薛之谦</item>
+        <item >关于郑州的记忆 - 李志</item>
+    </string-array>
+
+    <string-array name="song_urls" >
+        <item >http://file.bmob.cn/M03/46/32/oYYBAFcfB32AJzVZAFK420C4ZHM831.mp3</item>
+        <item >http://file.bmob.cn/M03/01/1F/oYYBAFb4h0uAQLufAE8BpAeKTGE542.mp3</item>
+        <item >http://file.bmob.cn/M03/19/3C/oYYBAFcEXhaARGgqADhFf4gjMoo381.mp3</item>
+    </string-array>
+
+    <string-array name="song_lyrics" >
+        <item >http://file.bmob.cn/M03/46/32/oYYBAFcfB4WAeGIUAAAFi6PSZkQ438.lrc</item>
+        <item >http://file.bmob.cn/M03/01/23/oYYBAFb4imuAIt0GAAAF85NozLk931.lrc</item>
+        <item >http://file.bmob.cn/M03/19/3C/oYYBAFcEXhuAAGcJAAAEjbM7txo237.lrc</item>
+    </string-array>
+</resources>
