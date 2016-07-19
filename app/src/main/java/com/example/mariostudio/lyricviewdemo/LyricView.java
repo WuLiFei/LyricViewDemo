@@ -330,7 +330,7 @@ public class LyricView extends View {
             if(mPlayerShow && clickPlayer(event)) {
                 if(mCurrentShowLine != mCurrentPlayLine) {
                     mCurrentPlayLine = mCurrentShowLine;
-                    mScrollY = measureCurrentScrollY(mCurrentShowLine);
+                    mScrollY = measureCurrentScrollY(mCurrentPlayLine);
                     if(mClickListener != null) {
                         mClickListener.onPlayerClicked(mLyricInfo.song_lines.get(mCurrentPlayLine - 1).start);
                     }

@@ -19,7 +19,7 @@
         android:layout_weight="1"
         android:padding="6dp" >
 
-        <com.example.mariostudio.customviewdemo.LyricView
+        <com.example.mariostudio.lyricviewdemo.LyricView
             android:id="@+id/lyric_view"
             android:layout_height="match_parent"
             android:layout_width="match_parent" />
