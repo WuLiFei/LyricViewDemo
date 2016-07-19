@@ -121,9 +121,9 @@ public class LyricView extends View {
         mPlayerPaint = new Paint();
         mPlayerPaint.setDither(true);
         mPlayerPaint.setAntiAlias(true);
-        mPlayerPaint.setStrokeWidth(2.0f);
+        mPlayerPaint.setStrokeWidth(3.0f);
         mPlayerPaint.setStyle(Paint.Style.STROKE);
-        mPlayerPaint.setColor( Color.parseColor("#EFEFEF"));
+        mPlayerPaint.setColor( Color.parseColor("#00CD00"));
         mPlayerPaint.setAlpha(114);
 
         mTimerPaint = new Paint();
@@ -154,10 +154,10 @@ public class LyricView extends View {
                     break;
                 }
                 if(i == mCurrentPlayLine - 1) {
-                    mTextPaint.setColor(Color.parseColor("#3CB371"));
+                    mTextPaint.setColor(Color.parseColor("#7AC5CD"));
                 } else {
                     if(mPlayerShow && i == mCurrentShowLine - 1) {
-                        mTextPaint.setColor(Color.parseColor("#969696"));
+                        mTextPaint.setColor(Color.parseColor("#AAAAAA"));
                     }else {
                         mTextPaint.setColor(Color.parseColor("#EFEFEF"));
                     }
@@ -261,7 +261,6 @@ public class LyricView extends View {
         }
     }
 
-
     private void setUserTouch(boolean isUserTouch) {
         if(mUserTouch == isUserTouch) {
             return;
@@ -315,7 +314,7 @@ public class LyricView extends View {
             float value02 = ((Math.abs(value01) - (mLineCount * mLineHeight * 0.5f)));   // 2  2  -42  -42
             mScrollY = value02 > 0 ? scrollY - (value02 * 0.5f * value01 / Math.abs(value01)) : scrollY;
             mVelocity = tracker.getYVelocity();
-            Log.e(getClass().getName(), "yVelocity: " + mVelocity);
+//            Log.e(getClass().getName(), "yVelocity: " + mVelocity);
             measureCurrentLine();
         }
     }
@@ -338,11 +337,13 @@ public class LyricView extends View {
             }
             if(Math.abs(mVelocity) > 6000) {
                 doFlingAnimator(mVelocity);
+                return;
             }
             if(mPlayerShow && clickPlayer(event)) {
                 if(mCurrentShowLine != mCurrentPlayLine) {
                     mPlayerShow = false;
                     if(mClickListener != null) {
+                        Log.e(getClass().getName(), "time: " + mLyricInfo.song_lines.get(mCurrentShowLine - 1).start + "");
                         mClickListener.onPlayerClicked(mLyricInfo.song_lines.get(mCurrentShowLine - 1).start);
                     }
                 }
@@ -363,6 +364,7 @@ public class LyricView extends View {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 mScrollY = (float) animation.getAnimatedValue();
+                measureCurrentLine();
                 invalidateView();
             }
         });
@@ -488,7 +490,7 @@ public class LyricView extends View {
         if(scrollable()) {
             for(int i = 0, size = mLineCount; i < size; i ++) {
                 LineInfo lineInfo = mLyricInfo.song_lines.get(i);
-                if(lineInfo != null && lineInfo.start >= time) {
+                if(lineInfo != null && lineInfo.start > time) {
                     position = i;
                     break;
                 }
