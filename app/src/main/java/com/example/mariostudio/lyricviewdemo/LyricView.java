@@ -13,10 +13,12 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewConfiguration;
+import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 
 import java.io.BufferedReader;
@@ -40,6 +42,7 @@ public class LyricView extends View {
     private float mLineHeight;
     private float mScrollY = 0;
     private float mLineSpace = 0;
+    private float mVelocity = 0;
     private float mShaderWidth = 0;
     private int mCurrentShowLine = 0;
     private int mCurrentPlayLine = 0;
@@ -153,10 +156,10 @@ public class LyricView extends View {
                 if(i == mCurrentPlayLine - 1) {
                     mTextPaint.setColor(Color.parseColor("#3CB371"));
                 } else {
-                    if(i == mCurrentShowLine - 1) {
+                    if(mPlayerShow && i == mCurrentShowLine - 1) {
                         mTextPaint.setColor(Color.parseColor("#969696"));
-                    } else {
-                        mTextPaint.setColor( Color.parseColor("#EFEFEF"));
+                    }else {
+                        mTextPaint.setColor(Color.parseColor("#EFEFEF"));
                     }
                 }
                 if(y > getMeasuredHeight() - mShaderWidth || y < mShaderWidth) {
@@ -293,6 +296,10 @@ public class LyricView extends View {
         mLastScrollY = mScrollY;
         mDownX = event.getX();
         mDownY = event.getY();
+        if(mFlingAnimator != null) {
+            mFlingAnimator.cancel();
+            mFlingAnimator = null;
+        }
         setUserTouch(true);
     }
 
@@ -307,6 +314,8 @@ public class LyricView extends View {
             float value01 = scrollY - (mLineCount * mLineHeight * 0.5f);   // 52  -52  8  -8
             float value02 = ((Math.abs(value01) - (mLineCount * mLineHeight * 0.5f)));   // 2  2  -42  -42
             mScrollY = value02 > 0 ? scrollY - (value02 * 0.5f * value01 / Math.abs(value01)) : scrollY;
+            mVelocity = tracker.getYVelocity();
+            Log.e(getClass().getName(), "yVelocity: " + mVelocity);
             measureCurrentLine();
         }
     }
@@ -327,16 +336,55 @@ public class LyricView extends View {
                 smoothScrollTo(mLineHeight * (mLineCount - 1));
                 return;
             }
+            if(Math.abs(mVelocity) > 6000) {
+                doFlingAnimator(mVelocity);
+            }
             if(mPlayerShow && clickPlayer(event)) {
                 if(mCurrentShowLine != mCurrentPlayLine) {
-                    mCurrentPlayLine = mCurrentShowLine;
-                    mScrollY = measureCurrentScrollY(mCurrentPlayLine);
+                    mPlayerShow = false;
                     if(mClickListener != null) {
-                        mClickListener.onPlayerClicked(mLyricInfo.song_lines.get(mCurrentPlayLine - 1).start);
+                        mClickListener.onPlayerClicked(mLyricInfo.song_lines.get(mCurrentShowLine - 1).start);
                     }
                 }
             }
         }
+    }
+
+    /**
+     * 滑行动画
+     * */
+    private void doFlingAnimator(float velocity) {
+        float distance = (velocity / Math.abs(velocity) * (velocity > 12000 ? 640 : 960));
+        float to = Math.min(Math.max(0, (mScrollY - distance)), (mLineCount - 1) * mLineHeight);
+
+        mFlingAnimator = ValueAnimator.ofFloat(mScrollY, to);
+        mFlingAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                mScrollY = (float) animation.getAnimatedValue();
+                invalidateView();
+            }
+        });
+        
+        mFlingAnimator.addListener(new AnimatorListenerAdapter() {
+            
+            @Override
+            public void onAnimationStart(Animator animation) {
+                super.onAnimationStart(animation);
+                mSliding = true;
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+                mSliding = false;
+            }
+        });
+
+        mFlingAnimator.setDuration(Math.abs(to - mScrollY) > 640 ? 420 : 240);
+        mFlingAnimator.setInterpolator(new DecelerateInterpolator());
+        mFlingAnimator.start();
     }
 
     /**
@@ -358,7 +406,7 @@ public class LyricView extends View {
      * 判断当前点击事件是否落在播放按钮触摸区域范围内
      * */
     private boolean clickPlayer(MotionEvent event) {
-        return mPlayerBound != null && event.getX() > mPlayerBound.left && event.getX() < mPlayerBound.right && event.getY() > mPlayerBound.top && event.getY() < mPlayerBound.bottom;
+        return mPlayerBound != null && event.getX() > mPlayerBound.left && event.getX() < mPlayerBound.right && event.getY() > mPlayerBound.top && event.getY() < mPlayerBound.bottom && mDownX > mPlayerBound.left && mDownX < mPlayerBound.right && mDownY > mPlayerBound.top && mDownY < mPlayerBound.bottom;
     }
 
     /**
@@ -449,10 +497,12 @@ public class LyricView extends View {
                 }
             }
         }
-        if(mCurrentPlayLine != position && !mUserTouch && !mSliding) {
+        if(mCurrentPlayLine != position && !mUserTouch && !mSliding && !mPlayerShow) {
+            mCurrentPlayLine = position;
             smoothScrollTo(measureCurrentScrollY(position));
+        } else {
+            mCurrentPlayLine = mCurrentShowLine = position;
         }
-        mCurrentPlayLine = position;
     }
 
     /**

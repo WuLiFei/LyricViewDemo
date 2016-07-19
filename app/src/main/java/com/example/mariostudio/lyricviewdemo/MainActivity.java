@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -240,7 +241,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onPlayerClicked(long progress) {
+        Log.e(getClass().getName(), "long: " + progress);
+        Log.e(getClass().getName(), "integer: " + (int) progress);
         mediaPlayer.seekTo((int) progress);
+        if(currentState == State.STATE_PAUSE) {
+            start();
+        }
     }
 
     @Override
