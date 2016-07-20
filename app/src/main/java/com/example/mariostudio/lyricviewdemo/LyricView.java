@@ -6,6 +6,7 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
@@ -38,28 +39,35 @@ import java.util.List;
 
 public class LyricView extends View {
 
-    private int mLineCount;
-    private float mLineHeight;
-    private float mScrollY = 0;
-    private float mLineSpace = 0;
-    private float mVelocity = 0;
-    private float mShaderWidth = 0;
-    private int mCurrentShowLine = 0;
-    private int mCurrentPlayLine = 0;
+    private int mBtnColor = Color.parseColor("#00BB9C");  // 按钮颜色
+    private int mDefaultColor = Color.parseColor("#FFFFFF");  // 默认字体颜色
+    private int mIndicatorColor = Color.parseColor("#EFEFEF");  // 指示器颜色
+    private int mCurrentPlayColor = Color.parseColor("#7AC5CD");  // 当前播放位置的颜色
+    private int mCurrentShowColor = Color.parseColor("#AAAAAA");  // 当前拖动位置的颜色
 
-    private boolean mUserTouch = false;
-    private boolean mPlayerShow = false;
+    private int mLineCount;  // 行数
+    private float mLineHeight;  // 行高
+    private float mScrollY = 0;  // 纵轴偏移量
+    private float mVelocity = 0;  // 纵轴上的滑动速度
+    private float mLineSpace = 0;  // 行间距（包含在行高中）
+    private float mShaderWidth = 0;  // 渐变过渡的距离
+    private int mCurrentShowLine = 0;  // 当前拖动位置对应的行数
+    private int mCurrentPlayLine = 0;  // 当前播放位置对应的行数
+
+    private boolean mUserTouch = false;  // 判断当前用户是否触摸
+    private boolean mIndicatorShow = false;  // 判断当前滑动指示器是否显示
 
     /***/
-    private int mPlayerWidth = 0;
-    private int maximumFlingVelocity;
-    private Rect mPlayerBound, mTimerBound;
+    private int mBtnWidth = 0;  // Btn 按钮的宽度
+    private int mDefaultMargin=12;
+    private int maximumFlingVelocity;  // 最大纵向滑动速度
+    private Rect mBtnBound, mTimerBound;
     private VelocityTracker mVelocityTracker;
 
     private LyricInfo mLyricInfo;
-    private String def_time = "--:--";
-    private String def_text = "点击搜索更多";
-    private Paint mTextPaint, mLinePaint, mTimerPaint, mPlayerPaint;
+    private String mDefaultTime = "00:00";
+    private String mDefaultHint = "LyricView";
+    private Paint mTextPaint, mBtnPaint, mIndicatorPaint;
 
     private OnPlayerClickListener mClickListener;
 
@@ -91,48 +99,40 @@ public class LyricView extends View {
         initAllBounds(density);
     }
 
+    /**
+     * 初始化需要的尺寸
+     * */
     private void initAllBounds(float density) {
         mLineSpace = 16 * density;
-
-        mPlayerWidth = (int) (20 * density);
-
+        mBtnWidth = (int) (20 * density);
         mTimerBound = new Rect();
-        mTimerPaint.getTextBounds(def_time, 0, def_time.length(), mTimerBound);
+        mIndicatorPaint.getTextBounds(mDefaultTime, 0, mDefaultTime.length(), mTimerBound);
 
-        Rect textBound = new Rect();
-        mTextPaint.getTextBounds(def_text, 0, def_text.length(), textBound);
-        mLineHeight = textBound.height() + mLineSpace;
+        measureLineHeight();
     }
 
+    /**
+     * 初始化画笔
+     * */
     private void initAllPaints(float density) {
         mTextPaint = new Paint();
         mTextPaint.setDither(true);
         mTextPaint.setAntiAlias(true);
         mTextPaint.setTextSize(14 * density);
         mTextPaint.setTextAlign(Paint.Align.CENTER);
-        mTextPaint.setColor(Color.parseColor("#EFEFEF"));
 
-        mLinePaint = new Paint();
-        mLinePaint.setDither(true);
-        mLinePaint.setAntiAlias(true);
-        mLinePaint.setColor(Color.parseColor("#EFEFEF"));
-        mLinePaint.setAlpha(36);
+        mIndicatorPaint = new Paint();
+        mIndicatorPaint.setDither(true);
+        mIndicatorPaint.setAntiAlias(true);
+        mIndicatorPaint.setTextSize(10 * density);
+        mIndicatorPaint.setTextAlign(Paint.Align.CENTER);
 
-        mPlayerPaint = new Paint();
-        mPlayerPaint.setDither(true);
-        mPlayerPaint.setAntiAlias(true);
-        mPlayerPaint.setStrokeWidth(3.0f);
-        mPlayerPaint.setStyle(Paint.Style.STROKE);
-        mPlayerPaint.setColor( Color.parseColor("#00CD00"));
-        mPlayerPaint.setAlpha(114);
-
-        mTimerPaint = new Paint();
-        mTimerPaint.setDither(true);
-        mTimerPaint.setAntiAlias(true);
-        mTimerPaint.setTextSize(10 * density);
-        mTimerPaint.setTextAlign(Paint.Align.CENTER);
-        mTimerPaint.setColor( Color.parseColor("#EFEFEF"));
-        mTimerPaint.setAlpha(114);
+        mBtnPaint = new Paint();
+        mBtnPaint.setDither(true);
+        mBtnPaint.setAntiAlias(true);
+        mBtnPaint.setColor(mBtnColor);
+        mBtnPaint.setStrokeWidth(3.0f);
+        mBtnPaint.setStyle(Paint.Style.STROKE);
     }
 
     @Override
@@ -154,12 +154,12 @@ public class LyricView extends View {
                     break;
                 }
                 if(i == mCurrentPlayLine - 1) {
-                    mTextPaint.setColor(Color.parseColor("#7AC5CD"));
+                    mTextPaint.setColor(mCurrentPlayColor);
                 } else {
-                    if(mPlayerShow && i == mCurrentShowLine - 1) {
-                        mTextPaint.setColor(Color.parseColor("#AAAAAA"));
+                    if(mIndicatorShow && i == mCurrentShowLine - 1) {
+                        mTextPaint.setColor(mCurrentShowColor);
                     }else {
-                        mTextPaint.setColor(Color.parseColor("#EFEFEF"));
+                        mTextPaint.setColor(mDefaultColor);
                     }
                 }
                 if(y > getMeasuredHeight() - mShaderWidth || y < mShaderWidth) {
@@ -174,17 +174,60 @@ public class LyricView extends View {
                 canvas.drawText(mLyricInfo.song_lines.get(i).content, x, y, mTextPaint);
             }
         } else {
-            mTextPaint.setColor(Color.parseColor("#3CB371"));
-            canvas.drawText(def_text, getMeasuredWidth() * 0.5f, (getMeasuredHeight() + mLineHeight - 6) * 0.5f, mTextPaint);
+            mTextPaint.setColor(mCurrentPlayColor);
+            canvas.drawText(mDefaultHint, getMeasuredWidth() * 0.5f, (getMeasuredHeight() + mLineHeight - 6) * 0.5f, mTextPaint);
         }
         /**
          * 滑动提示部分内容绘制
          * */
-        if(mPlayerShow && scrollable()) {
+        if(mIndicatorShow && scrollable()) {
             drawPlayer(canvas);
-            canvas.drawLine(mPlayerBound.right + 12 , getMeasuredHeight() * 0.5f, getMeasuredWidth() - mTimerBound.width() - mTimerBound.width() - 12, getMeasuredHeight() * 0.5f, mLinePaint);
-            canvas.drawText(measureCurrentTime(), getMeasuredWidth() - mTimerBound.width() - 6, (getMeasuredHeight() + mTimerBound.height() - 6) * 0.5f, mTimerPaint);
+            drawIndicator(canvas);
         }
+    }
+
+    /**
+     * 绘制左侧的播放按钮
+     * */
+    private void drawPlayer(Canvas canvas) {
+        mBtnBound = new Rect(mDefaultMargin, (int) (getMeasuredHeight() * 0.5f - mBtnWidth * 0.5f), mBtnWidth + mDefaultMargin, (int) (getMeasuredHeight() * 0.5f + mBtnWidth * 0.5f));
+
+        Path path = new Path();
+        float radio = mBtnBound.width() * 0.3f;
+        float value = (float) Math.sqrt(Math.pow(radio, 2) - Math.pow(radio * 0.5f, 2));
+        path.moveTo(mBtnBound.centerX() - radio * 0.5f, mBtnBound.centerY() - value);
+        path.lineTo(mBtnBound.centerX() - radio * 0.5f, mBtnBound.centerY() + value);
+        path.lineTo(mBtnBound.centerX() + radio, mBtnBound.centerY());
+        path.lineTo(mBtnBound.centerX() - radio * 0.5f, mBtnBound.centerY() - value);
+        canvas.drawPath(path, mBtnPaint);  // 绘制播放按钮的三角形
+        canvas.drawCircle(mBtnBound.centerX(), mBtnBound.centerY(), mBtnBound. width() * 0.48f, mBtnPaint);  // 绘制圆环
+    }
+
+    /**
+     * 绘制指示器
+     * */
+    private void drawIndicator(Canvas canvas) {
+        mIndicatorPaint.setColor(mIndicatorColor);
+        mIndicatorPaint.setAlpha(128);
+        mIndicatorPaint.setStyle(Paint.Style.FILL);
+        canvas.drawText(measureCurrentTime(), getMeasuredWidth() - mTimerBound.width(), (getMeasuredHeight() + mTimerBound.height() - 6) * 0.5f, mIndicatorPaint);
+
+        Path path = new Path();
+        mIndicatorPaint.setStrokeWidth(2.0f);
+        mIndicatorPaint.setStyle(Paint.Style.STROKE);
+        mIndicatorPaint.setPathEffect(new DashPathEffect(new float[]{20, 10}, 0));
+        path.moveTo(mBtnBound.right + 36 , getMeasuredHeight() * 0.5f);
+        path.lineTo(getMeasuredWidth() - mTimerBound.width() - mTimerBound.width() - 36, getMeasuredHeight() * 0.5f);
+        canvas.drawPath(path , mIndicatorPaint);
+    }
+
+    /**
+     * 计算行高度
+     * */
+    private void measureLineHeight() {
+        Rect lineBound = new Rect();
+        mTextPaint.getTextBounds(mDefaultHint, 0, mDefaultHint.length(), lineBound);
+        mLineHeight = lineBound.height() + mLineSpace;
     }
 
     /**
@@ -201,25 +244,7 @@ public class LyricView extends View {
         if(mLyricInfo != null && mLineCount > 0 && mCurrentShowLine - 1 <= 0) {
             return format.format(mLyricInfo.song_lines.get(0).start / 1000 / 60) + ":" + format.format(mLyricInfo.song_lines.get(0).start / 1000 % 60);
         }
-        return def_time;
-    }
-
-    /**
-     * 绘制左侧的播放按钮
-     * */
-    private void drawPlayer(Canvas canvas) {
-        mPlayerBound = new Rect(12, (int) (getMeasuredHeight() * 0.5f - mPlayerWidth * 0.5f), mPlayerWidth + 12, (int) (getMeasuredHeight() * 0.5f + mPlayerWidth * 0.5f));
-
-        Path path = new Path();
-        float radio = mPlayerBound.width() * 0.3f;
-        float value = (float) Math.sqrt(Math.pow(radio, 2) - Math.pow(radio * 0.5f, 2));
-        path.moveTo(mPlayerBound.centerX() - radio * 0.5f, mPlayerBound.centerY() - value);
-        path.lineTo(mPlayerBound.centerX() - radio * 0.5f, mPlayerBound.centerY() + value);
-        path.lineTo(mPlayerBound.centerX() + radio, mPlayerBound.centerY());
-        path.lineTo(mPlayerBound.centerX() - radio * 0.5f, mPlayerBound.centerY() - value);
-        canvas.drawPath(path, mPlayerPaint);
-
-        canvas.drawCircle(mPlayerBound.centerX(), mPlayerBound.centerY(), mPlayerBound. width() * 0.48f, mPlayerPaint);
+        return mDefaultTime;
     }
 
     private float mDownX, mDownY, mLastScrollY;      // 记录手指按下时的坐标和当前的滑动偏移量
@@ -248,35 +273,6 @@ public class LyricView extends View {
         }
         invalidateView();
         return true;
-    }
-
-    /**
-     * 刷新View
-     * */
-    private void invalidateView() {
-        if(Looper.getMainLooper() == Looper.myLooper()) {
-            invalidate();
-        } else {
-            postInvalidate();
-        }
-    }
-
-    private void setUserTouch(boolean isUserTouch) {
-        if(mUserTouch == isUserTouch) {
-            return;
-        }
-        mUserTouch = isUserTouch;
-        if(isUserTouch) {
-            mPlayerShow = isUserTouch;
-        }
-    }
-
-    private void releaseVelocityTracker() {
-        if(null != mVelocityTracker) {
-            mVelocityTracker.clear();
-            mVelocityTracker.recycle();
-            mVelocityTracker = null;
-        }
     }
 
     /**
@@ -314,7 +310,6 @@ public class LyricView extends View {
             float value02 = ((Math.abs(value01) - (mLineCount * mLineHeight * 0.5f)));   // 2  2  -42  -42
             mScrollY = value02 > 0 ? scrollY - (value02 * 0.5f * value01 / Math.abs(value01)) : scrollY;
             mVelocity = tracker.getYVelocity();
-//            Log.e(getClass().getName(), "yVelocity: " + mVelocity);
             measureCurrentLine();
         }
     }
@@ -324,9 +319,10 @@ public class LyricView extends View {
      * */
     private void actionUp(MotionEvent event) {
         releaseVelocityTracker();
+        // 2.4s 后发送一个指示器隐藏的请求
         postman.sendEmptyMessageDelayed(MSG_PLAYER_HIDE, 2400);
         if(scrollable()) {
-            setUserTouch(false);
+            setUserTouch(false);  // 用户手指离开屏幕，取消触摸标记
             if(overScrolled() && mScrollY < 0) {
                 smoothScrollTo(0);
                 return;
@@ -335,19 +331,56 @@ public class LyricView extends View {
                 smoothScrollTo(mLineHeight * (mLineCount - 1));
                 return;
             }
-            if(Math.abs(mVelocity) > 6000) {
+            if(Math.abs(mVelocity) > 3000) {
                 doFlingAnimator(mVelocity);
                 return;
             }
-            if(mPlayerShow && clickPlayer(event)) {
+            if(mIndicatorShow && clickPlayer(event)) {
                 if(mCurrentShowLine != mCurrentPlayLine) {
-                    mPlayerShow = false;
+                    mIndicatorShow = false;
                     if(mClickListener != null) {
                         Log.e(getClass().getName(), "time: " + mLyricInfo.song_lines.get(mCurrentShowLine - 1).start + "");
-                        mClickListener.onPlayerClicked(mLyricInfo.song_lines.get(mCurrentShowLine - 1).start);
+                        mClickListener.onPlayerClicked(mLyricInfo.song_lines.get(mCurrentShowLine - 1).start, mLyricInfo.song_lines.get(mCurrentShowLine - 1).content);
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * 刷新View
+     * */
+    private void invalidateView() {
+        if(Looper.getMainLooper() == Looper.myLooper()) {
+            //  当前线程是主UI线程，直接刷新。
+            invalidate();
+        } else {
+            //  当前线程是非UI线程，post刷新。
+            postInvalidate();
+        }
+    }
+
+    /**
+     * 设置用户是否触摸的标记
+     * */
+    private void setUserTouch(boolean isUserTouch) {
+        if(mUserTouch == isUserTouch) {
+            return;
+        }
+        mUserTouch = isUserTouch;
+        if(isUserTouch) {
+            mIndicatorShow = isUserTouch;
+        }
+    }
+
+    /**
+     * 释放速度追踪器
+     * */
+    private void releaseVelocityTracker() {
+        if(null != mVelocityTracker) {
+            mVelocityTracker.clear();
+            mVelocityTracker.recycle();
+            mVelocityTracker = null;
         }
     }
 
@@ -408,7 +441,12 @@ public class LyricView extends View {
      * 判断当前点击事件是否落在播放按钮触摸区域范围内
      * */
     private boolean clickPlayer(MotionEvent event) {
-        return mPlayerBound != null && event.getX() > mPlayerBound.left && event.getX() < mPlayerBound.right && event.getY() > mPlayerBound.top && event.getY() < mPlayerBound.bottom && mDownX > mPlayerBound.left && mDownX < mPlayerBound.right && mDownY > mPlayerBound.top && mDownY < mPlayerBound.bottom;
+        if(mBtnBound != null &&  mDownX > (mBtnBound.left - mDefaultMargin) && mDownX < (mBtnBound.right + mDefaultMargin) && mDownY > (mBtnBound.top - mDefaultMargin) && mDownY < (mBtnBound.bottom + mDefaultMargin)) {
+            float upX = event.getX();
+            float upY = event.getY();
+            return upX > (mBtnBound.left - mDefaultMargin) && upX < (mBtnBound.right + mDefaultMargin) && upY > (mBtnBound.top - mDefaultMargin) && upY < (mBtnBound.bottom + mDefaultMargin);
+        }
+        return false;
     }
 
     /**
@@ -473,7 +511,7 @@ public class LyricView extends View {
             switch (msg.what) {
                 case MSG_PLAYER_HIDE:
                     postman.sendEmptyMessageDelayed(MSG_PLAYER_SLIDE, 1200);
-                    mPlayerShow = false;
+                    mIndicatorShow = false;
                     invalidateView();
                 case MSG_PLAYER_SLIDE:
                     smoothScrollTo(measureCurrentScrollY(mCurrentPlayLine));
@@ -485,7 +523,7 @@ public class LyricView extends View {
     /**
      * 根据当前给定的时间戳滑动到指定位置
      * */
-    private void scrollToCurrent(long time) {
+    private void scrollToCurrentTimeMillis(long time) {
         int position = 0;
         if(scrollable()) {
             for(int i = 0, size = mLineCount; i < size; i ++) {
@@ -499,11 +537,13 @@ public class LyricView extends View {
                 }
             }
         }
-        if(mCurrentPlayLine != position && !mUserTouch && !mSliding && !mPlayerShow) {
+        if(mCurrentPlayLine != position && !mUserTouch && !mSliding && !mIndicatorShow) {
             mCurrentPlayLine = position;
             smoothScrollTo(measureCurrentScrollY(position));
         } else {
-            mCurrentPlayLine = mCurrentShowLine = position;
+            if(!mSliding) {
+                mCurrentPlayLine = mCurrentShowLine = position;
+            }
         }
     }
 
@@ -585,6 +625,9 @@ public class LyricView extends View {
         return millisecond + second * 1000 + minute * 60 * 1000;
     }
 
+    /**
+     * 重置歌词内容
+     * */
     private void resetLyricInfo() {
         if(mLyricInfo != null) {
             if(mLyricInfo.song_lines != null) {
@@ -595,7 +638,16 @@ public class LyricView extends View {
         }
     }
 
-
+    /**
+     * 初始化控件
+     * */
+    private void resetView() {
+        mCurrentPlayLine = mCurrentShowLine = 0;
+        resetLyricInfo();
+        invalidateView();
+        mLineCount = 0;
+        mScrollY = 0;
+    }
 
     class LyricInfo {
         List<LineInfo> song_lines;
@@ -613,14 +665,19 @@ public class LyricView extends View {
         long start;
     }
 
+    public interface OnPlayerClickListener {
+        public void onPlayerClicked(long progress, String content);
+    }
+
+
     /**
      * ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ *
      *                                                                                             对外API                                                                                        *
      * ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ *
      * */
 
-    public void setCurrent(long current) {
-        scrollToCurrent(current);
+    public void setCurrentTimeMillis(long current) {
+        scrollToCurrentTimeMillis(current);
     }
 
     public void setLyricFile(File file) {
@@ -636,11 +693,7 @@ public class LyricView extends View {
     }
 
     public void reset(String message) {
-        mCurrentPlayLine = mCurrentShowLine = 0;
-        def_text = message;
-        resetLyricInfo();
-        mLineCount = 0;
-        mScrollY = 0;
-        invalidateView();
+        mDefaultHint = message;
+        resetView();
     }
 }

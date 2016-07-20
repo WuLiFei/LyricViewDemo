@@ -1,4 +1,4 @@
-package com.example.mariostudio.lyricviewdemo;
+package com.example.mariostudio.lyricviewdemo.activity;
 
 import android.annotation.TargetApi;
 import android.media.MediaPlayer;
@@ -15,6 +15,9 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.example.mariostudio.lyricviewdemo.Constant;
+import com.example.mariostudio.lyricviewdemo.LyricView;
+import com.example.mariostudio.lyricviewdemo.R;
 import com.lidroid.xutils.HttpUtils;
 import com.lidroid.xutils.exception.HttpException;
 import com.lidroid.xutils.http.ResponseInfo;
@@ -24,7 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, MediaPlayer.OnBufferingUpdateListener, MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener, SeekBar.OnSeekBarChangeListener, OnPlayerClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, MediaPlayer.OnBufferingUpdateListener, MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener, SeekBar.OnSeekBarChangeListener, LyricView.OnPlayerClickListener {
 
     private LyricView lyricView;
     private MediaPlayer mediaPlayer;
@@ -181,7 +184,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         DecimalFormat format = new DecimalFormat("00");
         display_seek.setMax(mediaPlayer.getDuration());
         display_total.setText(format.format(mediaPlayer.getDuration() / 1000 / 60) + ":" + format.format(mediaPlayer.getDuration() / 1000 % 60));
-        File file = new File(Content.lyricPath + song_names[position] + ".lrc");
+        File file = new File(Constant.lyricPath + song_names[position] + ".lrc");
         if(file.exists()) {
             lyricView.setLyricFile(file);
         } else {
@@ -227,7 +230,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 case MSG_REFRESH:
                     if(mediaPlayer != null) {
                         if(!display_seek.isPressed()) {
-                            lyricView.setCurrent(mediaPlayer.getCurrentPosition());
+                            lyricView.setCurrentTimeMillis(mediaPlayer.getCurrentPosition());
                             DecimalFormat format = new DecimalFormat("00");
                             display_seek.setProgress(mediaPlayer.getCurrentPosition());
                             display_position.setText(format.format(mediaPlayer.getCurrentPosition() / 1000 / 60) + ":" + format.format(mediaPlayer.getCurrentPosition() / 1000 % 60));
@@ -240,7 +243,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     };
 
     @Override
-    public void onPlayerClicked(long progress) {
+    public void onPlayerClicked(long progress, String content) {
         Log.e(getClass().getName(), "long: " + progress);
         Log.e(getClass().getName(), "integer: " + (int) progress);
         mediaPlayer.seekTo((int) progress);

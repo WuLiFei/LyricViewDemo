@@ -2,8 +2,6 @@ package com.example.mariostudio.lyricviewdemo;
 
 import android.app.Application;
 
-import com.example.mariostudio.lyricviewdemo.Content;
-
 import java.io.File;
 
 /**
@@ -15,7 +13,7 @@ public class MyApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        File file = new File(Content.lyricPath);
+        File file = new File(Constant.lyricPath);
         if(!file.exists()) {
             file.mkdirs();
         }
