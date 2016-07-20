@@ -53,6 +53,7 @@ public class LyricView extends View {
     private float mShaderWidth = 0;  // 渐变过渡的距离
     private int mCurrentShowLine = 0;  // 当前拖动位置对应的行数
     private int mCurrentPlayLine = 0;  // 当前播放位置对应的行数
+    private int mMinStartUpSpeed = 2400;  // 最低滑行启动速度
 
     private boolean mUserTouch = false;  // 判断当前用户是否触摸
     private boolean mIndicatorShow = false;  // 判断当前滑动指示器是否显示
@@ -331,7 +332,7 @@ public class LyricView extends View {
                 smoothScrollTo(mLineHeight * (mLineCount - 1));
                 return;
             }
-            if(Math.abs(mVelocity) > 3000) {
+            if(Math.abs(mVelocity) > mMinStartUpSpeed) {
                 doFlingAnimator(mVelocity);
                 return;
             }
@@ -339,7 +340,6 @@ public class LyricView extends View {
                 if(mCurrentShowLine != mCurrentPlayLine) {
                     mIndicatorShow = false;
                     if(mClickListener != null) {
-                        Log.e(getClass().getName(), "time: " + mLyricInfo.song_lines.get(mCurrentShowLine - 1).start + "");
                         mClickListener.onPlayerClicked(mLyricInfo.song_lines.get(mCurrentShowLine - 1).start, mLyricInfo.song_lines.get(mCurrentShowLine - 1).content);
                     }
                 }
@@ -407,6 +407,7 @@ public class LyricView extends View {
             @Override
             public void onAnimationStart(Animator animation) {
                 super.onAnimationStart(animation);
+                mVelocity = mMinStartUpSpeed - 1;
                 mSliding = true;
             }
 
@@ -414,6 +415,12 @@ public class LyricView extends View {
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
                 mSliding = false;
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                super.onAnimationCancel(animation);
+                mVelocity = mMinStartUpSpeed - 1;
             }
         });
 
@@ -541,7 +548,7 @@ public class LyricView extends View {
             mCurrentPlayLine = position;
             smoothScrollTo(measureCurrentScrollY(position));
         } else {
-            if(!mSliding) {
+            if(!mSliding && !mIndicatorShow) {
                 mCurrentPlayLine = mCurrentShowLine = position;
             }
         }
