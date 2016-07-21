@@ -53,14 +53,14 @@ public class LyricView extends View {
     private float mShaderWidth = 0;  // 渐变过渡的距离
     private int mCurrentShowLine = 0;  // 当前拖动位置对应的行数
     private int mCurrentPlayLine = 0;  // 当前播放位置对应的行数
-    private int mMinStartUpSpeed = 2400;  // 最低滑行启动速度
+    private int mMinStartUpSpeed = 1600;  // 最低滑行启动速度
 
     private boolean mUserTouch = false;  // 判断当前用户是否触摸
     private boolean mIndicatorShow = false;  // 判断当前滑动指示器是否显示
 
     /***/
     private int mBtnWidth = 0;  // Btn 按钮的宽度
-    private int mDefaultMargin=12;
+    private int mDefaultMargin = 12;
     private int maximumFlingVelocity;  // 最大纵向滑动速度
     private Rect mBtnBound, mTimerBound;
     private VelocityTracker mVelocityTracker;
@@ -309,10 +309,18 @@ public class LyricView extends View {
             float scrollY = mLastScrollY + mDownY - event.getY();   // 102  -2  58  42
             float value01 = scrollY - (mLineCount * mLineHeight * 0.5f);   // 52  -52  8  -8
             float value02 = ((Math.abs(value01) - (mLineCount * mLineHeight * 0.5f)));   // 2  2  -42  -42
-            mScrollY = value02 > 0 ? scrollY - (value02 * 0.5f * value01 / Math.abs(value01)) : scrollY;
+            mScrollY = value02 > 0 ? scrollY - (measureDampingDistance(value02) * value01 / Math.abs(value01)) : scrollY;   //   value01 / Math.abs(value01)  控制滑动方向
             mVelocity = tracker.getYVelocity();
             measureCurrentLine();
         }
+    }
+
+    /**
+     * 计算阻尼效果的大小
+     * */
+    private final int mMaxDampingDistance = 360;
+    private float measureDampingDistance(float value02) {
+        return value02 > mMaxDampingDistance ? (mMaxDampingDistance * 0.6f + (value02 - mMaxDampingDistance) * 0.72f) : value02 * 0.6f;
     }
 
     /**
@@ -388,8 +396,9 @@ public class LyricView extends View {
      * 滑行动画
      * */
     private void doFlingAnimator(float velocity) {
-        float distance = (velocity / Math.abs(velocity) * (velocity > 12000 ? 640 : 960));
-        float to = Math.min(Math.max(0, (mScrollY - distance)), (mLineCount - 1) * mLineHeight);
+        //注：     Math.abs(velocity)  < =  16000
+        float distance = (velocity / Math.abs(velocity) * Math.min((Math.abs(velocity) * 0.050f), 640));   // 计算就已当前的滑动速度理论上的滑行距离是多少
+        float to = Math.min(Math.max(0, (mScrollY - distance)), (mLineCount - 1) * mLineHeight);   // 综合考虑边界问题后得出的实际滑行距离
 
         mFlingAnimator = ValueAnimator.ofFloat(mScrollY, to);
         mFlingAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
@@ -420,17 +429,16 @@ public class LyricView extends View {
             @Override
             public void onAnimationCancel(Animator animation) {
                 super.onAnimationCancel(animation);
-                mVelocity = mMinStartUpSpeed - 1;
             }
         });
 
-        mFlingAnimator.setDuration(Math.abs(to - mScrollY) > 640 ? 420 : 240);
+        mFlingAnimator.setDuration(420);
         mFlingAnimator.setInterpolator(new DecelerateInterpolator());
         mFlingAnimator.start();
     }
 
     /**
-     * 通过偏移量获得当前显示的行数
+     * To measure current showing line number based on the view's scroll Y
      * */
     private void measureCurrentLine() {
         float baseScrollY = mScrollY + mLineHeight * 0.5f;
@@ -438,7 +446,8 @@ public class LyricView extends View {
     }
 
     /**
-     * 通过行数计算当前歌词内容的偏移量
+     * @param line
+     * Input current showing line to measure the view's current scroll Y
      * */
     private float measureCurrentScrollY(int line) {
         return (line - 1) * mLineHeight;
@@ -449,8 +458,7 @@ public class LyricView extends View {
      * */
     private boolean clickPlayer(MotionEvent event) {
         if(mBtnBound != null &&  mDownX > (mBtnBound.left - mDefaultMargin) && mDownX < (mBtnBound.right + mDefaultMargin) && mDownY > (mBtnBound.top - mDefaultMargin) && mDownY < (mBtnBound.bottom + mDefaultMargin)) {
-            float upX = event.getX();
-            float upY = event.getY();
+            float upX = event.getX();   float upY = event.getY();
             return upX > (mBtnBound.left - mDefaultMargin) && upX < (mBtnBound.right + mDefaultMargin) && upY > (mBtnBound.top - mDefaultMargin) && upY < (mBtnBound.bottom + mDefaultMargin);
         }
         return false;
@@ -529,6 +537,7 @@ public class LyricView extends View {
 
     /**
      * 根据当前给定的时间戳滑动到指定位置
+     * @param time  时间戳
      * */
     private void scrollToCurrentTimeMillis(long time) {
         int position = 0;
@@ -555,14 +564,15 @@ public class LyricView extends View {
     }
 
     /**
-     *
+     * 初始化歌词信息
+     * @param inputStream  歌词文件的流信息
      * */
-    private void setupLyricResource(InputStream inputStream) {
+    private void setupLyricResource(InputStream inputStream, String charsetName) {
         if(inputStream != null) {
             try {
                 LyricInfo lyricInfo = new LyricInfo();
                 lyricInfo.song_lines = new ArrayList<>();
-                InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "GBK");
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream, charsetName);
                 BufferedReader reader = new BufferedReader(inputStreamReader);
                 String line = null;
                 while((line = reader.readLine()) != null) {
@@ -683,22 +693,39 @@ public class LyricView extends View {
      * ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ *
      * */
 
+    /**
+     * 设置当前时间显示位置
+     * @param current  时间戳
+     * */
     public void setCurrentTimeMillis(long current) {
         scrollToCurrentTimeMillis(current);
     }
 
-    public void setLyricFile(File file) {
+    /**
+     * 设置歌词文件
+     * @param file  歌词文件
+     * @param charsetName  解析字符集
+     * */
+    public void setLyricFile(File file, String charsetName) {
         try {
-            setupLyricResource(new FileInputStream(file));
+            setupLyricResource(new FileInputStream(file), charsetName);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     * 设置播放按钮点击监听事件
+     * @param mClickListener  监听器
+     * */
     public void setOnPlayerClickListener(OnPlayerClickListener mClickListener) {
         this.mClickListener = mClickListener;
     }
 
+    /**
+     * 重置、设置歌词内容被重置后的提示内容
+     * @param message  提示内容
+     * */
     public void reset(String message) {
         mDefaultHint = message;
         resetView();
