@@ -204,7 +204,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         display_total.setText(format.format(mediaPlayer.getDuration() / 1000 / 60) + ":" + format.format(mediaPlayer.getDuration() / 1000 % 60));
         File file = new File(Constant.lyricPath + song_names[position] + ".lrc");
         if(file.exists()) {
-            lyricView.setLyricFile(file);
+            lyricView.setLyricFile(file, "GBK");
         } else {
             downloadLyric(song_lyrics[position], file);
         }
@@ -295,7 +295,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             @Override
             public void onSuccess(ResponseInfo<File> responseInfo) {
-                lyricView.setLyricFile(responseInfo.result);
+                lyricView.setLyricFile(responseInfo.result, "GBK");
             }
 
             @Override
