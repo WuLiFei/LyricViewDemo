@@ -7,17 +7,26 @@
         <item >一个人的北京 - 好妹妹乐队</item>
         <item >小孩 - 薛之谦</item>
         <item >关于郑州的记忆 - 李志</item>
+        <item >有没有 - 向洋</item>
+        <item >天空之城 - 蒋敦豪</item>
+        <item >十万毫升泪水 - 杨博</item>
     </string-array>
 
     <string-array name="song_urls" >
         <item >http://file.bmob.cn/M03/46/32/oYYBAFcfB32AJzVZAFK420C4ZHM831.mp3</item>
         <item >http://file.bmob.cn/M03/01/1F/oYYBAFb4h0uAQLufAE8BpAeKTGE542.mp3</item>
         <item >http://file.bmob.cn/M03/19/3C/oYYBAFcEXhaARGgqADhFf4gjMoo381.mp3</item>
+        <item >http://file.bmob.cn/M01/E5/33/oYYBAFeQwI-AbaaSADi1pQR_dl4863.mp3</item>
+        <item >http://file.bmob.cn/M01/E5/33/oYYBAFeQwGWAfRdgADyhv6QB3SM685.mp3</item>
+        <item >http://file.bmob.cn/M01/E5/32/oYYBAFeQwEKAO7XrAEFdMg3pxdk813.mp3</item>
     </string-array>
 
     <string-array name="song_lyrics" >
         <item >http://file.bmob.cn/M03/46/32/oYYBAFcfB4WAeGIUAAAFi6PSZkQ438.lrc</item>
         <item >http://file.bmob.cn/M03/01/23/oYYBAFb4imuAIt0GAAAF85NozLk931.lrc</item>
         <item >http://file.bmob.cn/M03/19/3C/oYYBAFcEXhuAAGcJAAAEjbM7txo237.lrc</item>
+        <item >http://file.bmob.cn/M02/E5/30/oYYBAFeQv92Ad1KGAAAFn8w6BKk478.lrc</item>
+        <item >http://file.bmob.cn/M02/E5/30/oYYBAFeQv92AFxfcAAAF7kysjMQ886.lrc</item>
+        <item >http://file.bmob.cn/M02/E5/30/oYYBAFeQv9yAA_6sAAAFVhT1rhA645.lrc</item>
     </string-array>
 </resources>

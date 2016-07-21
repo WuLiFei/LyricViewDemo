@@ -1,5 +1,9 @@
 package com.example.mariostudio.lyricviewdemo.activity;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
 import android.media.MediaPlayer;
 import android.os.Build;
@@ -22,6 +26,7 @@ import com.lidroid.xutils.HttpUtils;
 import com.lidroid.xutils.exception.HttpException;
 import com.lidroid.xutils.http.ResponseInfo;
 import com.lidroid.xutils.http.callback.RequestCallBack;
+import com.nineoldandroids.view.ViewHelper;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,8 +37,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private LyricView lyricView;
     private MediaPlayer mediaPlayer;
 
+    private View statueBar;
     private SeekBar display_seek;
     private TextView display_total;
+    private TextView display_title;
     private TextView display_position;
 
     private ImageView btnPre, btnPlay, btnNext;
@@ -47,13 +54,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private final int MSG_REFRESH = 0x167;
 
+    private long animatorDuration = 120;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            setTranslucentStatus(true);
+            setTranslucentStatus();
         }
 
         initAllViews();
@@ -61,22 +70,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @TargetApi(19)
-    private void setTranslucentStatus(boolean on) {
-        Window win = getWindow();
-        WindowManager.LayoutParams winParams = win.getAttributes();
-        final int bits = WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS;
-        if (on) {
-            winParams.flags |= bits;
-        } else {
-            winParams.flags &= ~bits;
+    private void setTranslucentStatus() {
+        Window window = getWindow();
+        WindowManager.LayoutParams params = window.getAttributes();
+        final int status = WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS;
+        params.flags |= status;
+        window.setAttributes(params);
+    }
+
+    public int getStatusBarHeight() {
+        int result = 0;
+        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            result = getResources().getDimensionPixelSize(resourceId);
         }
-        win.setAttributes(winParams);
+        return result;
     }
 
     private void initAllViews() {
+        statueBar = findViewById(R.id.statue_bar);
+        statueBar.getLayoutParams().height = getStatusBarHeight();
         lyricView = (LyricView) findViewById(R.id.lyric_view);
         lyricView.setOnPlayerClickListener(this);
-
+        display_title = (TextView) findViewById(R.id.title_view);
         display_position = (TextView) findViewById(android.R.id.text1);
         display_total = (TextView) findViewById(android.R.id.text2);
         display_seek = (SeekBar) findViewById(android.R.id.progress);
@@ -108,6 +124,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mediaPlayer.setOnCompletionListener(this);
             mediaPlayer.setDataSource(song_urls[position]);
             mediaPlayer.prepareAsync();
+
+            display_title.setText(song_names[position]);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -296,11 +314,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case android.R.id.button2:
                 if(currentState == State.STATE_PAUSE) {
                     start();
-                    return;
+                    break;
                 }
                 if(currentState == State.STATE_PLAYING) {
                     pause();
-                    return;
+                    break;
                 }
                 break;
             case android.R.id.button3:
@@ -309,6 +327,60 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             default:
                 break;
         }
+        pressAnimator(view).start();
+    }
+
+    public ValueAnimator pressAnimator(final View view) {
+        ValueAnimator animator = ValueAnimator.ofFloat(view.getScaleX(), view.getScaleX() * 0.7f);
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                ViewHelper.setScaleX(view, (Float) animation.getAnimatedValue());
+                ViewHelper.setScaleY(view, (Float) animation.getAnimatedValue());
+            }
+        });
+        animator.addListener(new AnimatorListenerAdapter() {
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+                upAnimator(view).start();
+            }
+        });
+        animator.setDuration(animatorDuration);
+        return animator;
+    }
+
+    public ValueAnimator upAnimator(final View view) {
+        ValueAnimator animator = ValueAnimator.ofFloat(view.getScaleX(), view.getScaleX() * 10 / 7.00f);
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                ViewHelper.setScaleX(view, (Float) animation.getAnimatedValue());
+                ViewHelper.setScaleY(view, (Float) animation.getAnimatedValue());
+            }
+        });
+        animator.addListener(new AnimatorListenerAdapter() {
+
+            @Override
+            public void onAnimationStart(Animator animation) {
+                super.onAnimationStart(animation);
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                super.onAnimationCancel(animation);
+            }
+        });
+        animator.setDuration(animatorDuration);
+        return animator;
     }
 
     private enum State {
