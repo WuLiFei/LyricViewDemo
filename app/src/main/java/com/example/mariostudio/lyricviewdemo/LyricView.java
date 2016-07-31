@@ -14,7 +14,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -39,7 +38,7 @@ import java.util.List;
 
 public class LyricView extends View {
 
-    private int mBtnColor = Color.parseColor("#00BB9C");  // 按钮颜色
+    private int mBtnColor = Color.parseColor("#EFEFEF");  // 按钮颜色
     private int mDefaultColor = Color.parseColor("#FFFFFF");  // 默认字体颜色
     private int mIndicatorColor = Color.parseColor("#EFEFEF");  // 指示器颜色
     private int mCurrentPlayColor = Color.parseColor("#7AC5CD");  // 当前播放位置的颜色
@@ -67,7 +66,7 @@ public class LyricView extends View {
 
     private LyricInfo mLyricInfo;
     private String mDefaultTime = "00:00";
-    private String mDefaultHint = "LyricView";
+    private String mDefaultHint = "暂无歌词";
     private Paint mTextPaint, mBtnPaint, mIndicatorPaint;
 
     private OnPlayerClickListener mClickListener;
@@ -200,6 +199,7 @@ public class LyricView extends View {
         path.lineTo(mBtnBound.centerX() - radio * 0.5f, mBtnBound.centerY() + value);
         path.lineTo(mBtnBound.centerX() + radio, mBtnBound.centerY());
         path.lineTo(mBtnBound.centerX() - radio * 0.5f, mBtnBound.centerY() - value);
+        mBtnPaint.setAlpha(128);
         canvas.drawPath(path, mBtnPaint);  // 绘制播放按钮的三角形
         canvas.drawCircle(mBtnBound.centerX(), mBtnBound.centerY(), mBtnBound. width() * 0.48f, mBtnPaint);  // 绘制圆环
     }
@@ -588,6 +588,9 @@ public class LyricView extends View {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        } else {
+            mDefaultHint = "暂无歌词";
+            invalidateView();
         }
     }
 
@@ -669,17 +672,17 @@ public class LyricView extends View {
     class LyricInfo {
         List<LineInfo> song_lines;
 
-        String song_artist;
-        String song_title;
-        String song_album;
+        String song_artist;  // 歌手
+        String song_title;  // 标题
+        String song_album;  // 专辑
 
-        long song_offset;
+        long song_offset;  // 偏移量
 
     }
 
     class LineInfo {
-        String content;
-        long start;
+        String content;  // 歌词内容
+        long start;  // 开始时间
     }
 
     public interface OnPlayerClickListener {
@@ -707,10 +710,15 @@ public class LyricView extends View {
      * @param charsetName  解析字符集
      * */
     public void setLyricFile(File file, String charsetName) {
-        try {
-            setupLyricResource(new FileInputStream(file), charsetName);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+        if(file != null && file.exists()) {
+            try {
+                setupLyricResource(new FileInputStream(file), charsetName);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        } else {
+            mDefaultHint = "暂无歌词";
+            invalidateView();
         }
     }
 

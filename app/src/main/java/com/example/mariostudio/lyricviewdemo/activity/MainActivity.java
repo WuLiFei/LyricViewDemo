@@ -2,16 +2,15 @@ package com.example.mariostudio.lyricviewdemo.activity;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
-import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -49,8 +48,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private String song_names[] = null;
     private String song_lyrics[] = null;
 
+    private float density;
     private int position = 0;
     private State currentState = State.STATE_STOP;
+    private ValueAnimator press_animator, up_animator;
 
     private final int MSG_REFRESH = 0x167;
 
@@ -59,14 +60,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            setTranslucentStatus();
-        }
+        Intent intent = new Intent(this, OtherActivity.class);
+        startActivity(intent);
+        finish();
 
-        initAllViews();
-        initAllDatum();
+//        setContentView(R.layout.activity_main);
+//
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+//            setTranslucentStatus();
+//        }
+//
+//        initAllViews();
+//        initAllDatum();
     }
 
     @TargetApi(19)
@@ -122,6 +128,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             setCurrentState(State.STATE_SETUP);
             mediaPlayer.setOnPreparedListener(this);
             mediaPlayer.setOnCompletionListener(this);
+            mediaPlayer.setOnBufferingUpdateListener(this);
             mediaPlayer.setDataSource(song_urls[position]);
             mediaPlayer.prepareAsync();
 
@@ -137,7 +144,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private boolean stop() {
         if(null != mediaPlayer && currentState != State.STATE_STOP) {
             handler.removeMessages(MSG_REFRESH);
-            lyricView.reset("加载中..");
+            lyricView.reset("载入歌词ing...");
             setCurrentState(State.STATE_STOP);
             mediaPlayer.stop();
             mediaPlayer.release();
@@ -213,7 +220,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onBufferingUpdate(MediaPlayer mediaPlayer, int percent) {
-
+        display_seek.setSecondaryProgress((int) (mediaPlayer.getDuration() * 1.00f * percent / 100.0f));
     }
 
     @Override
@@ -235,6 +242,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case STATE_PLAYING:
                 btnPlay.setImageResource(R.mipmap.m_icon_player_pause_normal);
+                break;
+            case STATE_STOP:
+                display_position.setText("00:00");
+                display_seek.setSecondaryProgress(0);
+                display_seek.setProgress(0);
+                display_seek.setMax(100);
+                break;
+            default:
                 break;
         }
     }
@@ -262,8 +277,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onPlayerClicked(long progress, String content) {
-        Log.e(getClass().getName(), "long: " + progress);
-        Log.e(getClass().getName(), "integer: " + (int) progress);
         mediaPlayer.seekTo((int) progress);
         if(currentState == State.STATE_PAUSE) {
             start();
@@ -307,6 +320,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View view) {
+        if(press_animator != null && press_animator.isRunning()) {
+            press_animator.cancel();
+        }
+        if(up_animator != null && up_animator.isRunning()) {
+            up_animator.cancel();
+        }
         switch (view.getId()) {
             case android.R.id.button1:
                 previous();
@@ -327,11 +346,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             default:
                 break;
         }
-        pressAnimator(view).start();
+        press_animator = pressAnimator(view);
+        press_animator.start();
     }
 
     public ValueAnimator pressAnimator(final View view) {
-        ValueAnimator animator = ValueAnimator.ofFloat(view.getScaleX(), view.getScaleX() * 0.7f);
+        final float size = view.getScaleX();
+        ValueAnimator animator = ValueAnimator.ofFloat(size, size * 0.7f);
         animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
 
             @Override
@@ -345,7 +366,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
-                upAnimator(view).start();
+                ViewHelper.setScaleX(view, size * 0.7f);
+                ViewHelper.setScaleY(view, size * 0.7f);
+                up_animator = upAnimator(view);
+                up_animator.start();
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                super.onAnimationCancel(animation);
+                ViewHelper.setScaleX(view, size * 0.7f);
+                ViewHelper.setScaleY(view, size * 0.7f);
             }
         });
         animator.setDuration(animatorDuration);
@@ -353,7 +384,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public ValueAnimator upAnimator(final View view) {
-        ValueAnimator animator = ValueAnimator.ofFloat(view.getScaleX(), view.getScaleX() * 10 / 7.00f);
+        final float size = view.getScaleX();
+        ValueAnimator animator = ValueAnimator.ofFloat(size, size * 10 / 7.00f);
         animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
 
             @Override
@@ -372,11 +404,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
+                ViewHelper.setScaleX(view, size * 10 / 7.00f);
+                ViewHelper.setScaleY(view, size * 10 / 7.00f);
             }
 
             @Override
             public void onAnimationCancel(Animator animation) {
                 super.onAnimationCancel(animation);
+                ViewHelper.setScaleX(view, size * 10 / 7.00f);
+                ViewHelper.setScaleY(view, size * 10 / 7.00f);
             }
         });
         animator.setDuration(animatorDuration);

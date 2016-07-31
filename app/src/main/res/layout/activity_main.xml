@@ -3,6 +3,7 @@
     android:background="@mipmap/m_img_loading"
     android:layout_height="match_parent"
     android:layout_width="match_parent"
+    android:gravity="center_horizontal"
     android:orientation="vertical" >
 
     <View
@@ -11,11 +12,15 @@
         android:layout_height="0dp" />
 
     <TextView
-        android:text="一个人的北京 - 好妹妹乐队"
-        android:layout_width="match_parent"
-        android:id="@+id/title_view"
+        tools:text="一个人的北京 - 好妹妹乐队"
+        android:focusableInTouchMode="true"
+        android:layout_width="196dp"
         android:layout_height="64dp"
+        android:id="@+id/title_view"
         android:textColor="#FFFFFF"
+        android:singleLine="true"
+        android:ellipsize="marquee"
+        android:focusable="true"
         android:gravity="center"
         android:textSize="18sp" />
 
@@ -74,7 +79,7 @@
             android:paddingRight="12dp"
             android:paddingBottom="3dp"
             android:progressDrawable="@drawable/layer_player_playing_progress"
-            android:thumb="@mipmap/player_seekbar_playback_thumb"
+            android:thumb="@drawable/selector_player_playing_thumb"
             android:id="@android:id/progress"
             android:layout_width="0dp"
             android:layout_weight="1"
