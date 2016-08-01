@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.view.ViewStub;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
@@ -20,6 +21,8 @@ import android.widget.TextView;
 import com.example.mariostudio.lyricviewdemo.Constant;
 import com.example.mariostudio.lyricviewdemo.LyricView;
 import com.example.mariostudio.lyricviewdemo.R;
+import com.example.mariostudio.lyricviewdemo.view.CustomRelativeLayout;
+import com.example.mariostudio.lyricviewdemo.view.CustomSettingView;
 import com.lidroid.xutils.HttpUtils;
 import com.lidroid.xutils.exception.HttpException;
 import com.lidroid.xutils.http.ResponseInfo;
@@ -41,7 +44,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView display_title;
     private TextView display_position;
 
-    private ImageView btnPre, btnPlay, btnNext;
+    private ImageView btnPre, btnPlay, btnNext, btnSetting;
 
     private String song_urls[] = null;
     private String song_names[] = null;
@@ -50,6 +53,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private int position = 0;
     private State currentState = State.STATE_STOP;
     private ValueAnimator press_animator, up_animator;
+
+    private ViewStub setting_layout;
+    private CustomSettingView customSettingView;
+    private CustomRelativeLayout customRelativeLayout;
 
     private final int MSG_REFRESH = 0x167;
 
@@ -104,10 +111,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnNext = (ImageView) findViewById(android.R.id.button3);
         btnPlay = (ImageView) findViewById(android.R.id.button2);
         btnPre = (ImageView) findViewById(android.R.id.button1);
+        btnSetting = (ImageView) findViewById(R.id.action_setting);
+        btnSetting.setOnClickListener(this);
         btnPlay.setOnClickListener(this);
         btnNext.setOnClickListener(this);
         btnPre.setOnClickListener(this);
 
+        setting_layout = (ViewStub) findViewById(R.id.main_setting_layout);
     }
 
     private void initAllDatum() {
@@ -340,6 +350,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case android.R.id.button3:
                 next();
+                break;
+            case R.id.action_setting:
+                if(customRelativeLayout == null) {
+                    customRelativeLayout = (CustomRelativeLayout) setting_layout.inflate();
+                }
+                customRelativeLayout.show();
                 break;
             default:
                 break;
