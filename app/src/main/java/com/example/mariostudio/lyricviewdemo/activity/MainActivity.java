@@ -4,7 +4,6 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
-import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
@@ -48,7 +47,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private String song_names[] = null;
     private String song_lyrics[] = null;
 
-    private float density;
     private int position = 0;
     private State currentState = State.STATE_STOP;
     private ValueAnimator press_animator, up_animator;
@@ -61,18 +59,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Intent intent = new Intent(this, OtherActivity.class);
-        startActivity(intent);
-        finish();
+        setContentView(R.layout.activity_main);
 
-//        setContentView(R.layout.activity_main);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            setTranslucentStatus();
+        }
+
+//        Intent intent = new Intent(this, OtherActivity.class);
+//        startActivity(intent);
+//        finish();
 //
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-//            setTranslucentStatus();
-//        }
-//
-//        initAllViews();
-//        initAllDatum();
+        initAllViews();
+        initAllDatum();
     }
 
     @TargetApi(19)
@@ -109,6 +107,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnPlay.setOnClickListener(this);
         btnNext.setOnClickListener(this);
         btnPre.setOnClickListener(this);
+
     }
 
     private void initAllDatum() {
@@ -131,7 +130,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mediaPlayer.setOnBufferingUpdateListener(this);
             mediaPlayer.setDataSource(song_urls[position]);
             mediaPlayer.prepareAsync();
-
             display_title.setText(song_names[position]);
         } catch (IOException e) {
             e.printStackTrace();

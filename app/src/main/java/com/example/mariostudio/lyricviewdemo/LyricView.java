@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
@@ -14,6 +15,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -39,9 +41,10 @@ import java.util.List;
 public class LyricView extends View {
 
     private int mBtnColor = Color.parseColor("#EFEFEF");  // 按钮颜色
+    private int mHintColor = Color.parseColor("#FFFFFF");  // 提示语颜色
     private int mDefaultColor = Color.parseColor("#FFFFFF");  // 默认字体颜色
     private int mIndicatorColor = Color.parseColor("#EFEFEF");  // 指示器颜色
-    private int mCurrentPlayColor = Color.parseColor("#7AC5CD");  // 当前播放位置的颜色
+    private int mHighLightColor = Color.parseColor("#7AC5CD");  // 当前播放位置的颜色
     private int mCurrentShowColor = Color.parseColor("#AAAAAA");  // 当前拖动位置的颜色
 
     private int mLineCount;  // 行数
@@ -94,17 +97,17 @@ public class LyricView extends View {
 
     private void initMyView(Context context) {
         maximumFlingVelocity = ViewConfiguration.get(context).getScaledMaximumFlingVelocity();
-        float density = getResources().getDisplayMetrics().density;
-        initAllPaints(density);
-        initAllBounds(density);
+        initAllPaints();
+        initAllBounds();
     }
 
     /**
      * 初始化需要的尺寸
      * */
-    private void initAllBounds(float density) {
-        mLineSpace = 16 * density;
-        mBtnWidth = (int) (20 * density);
+    private void initAllBounds() {
+        setTextSize(15);
+        setLineSpace(12);
+        mBtnWidth = (int) (getRawSize(TypedValue.COMPLEX_UNIT_SP, 20));
         mTimerBound = new Rect();
         mIndicatorPaint.getTextBounds(mDefaultTime, 0, mDefaultTime.length(), mTimerBound);
 
@@ -114,17 +117,16 @@ public class LyricView extends View {
     /**
      * 初始化画笔
      * */
-    private void initAllPaints(float density) {
+    private void initAllPaints() {
         mTextPaint = new Paint();
         mTextPaint.setDither(true);
         mTextPaint.setAntiAlias(true);
-        mTextPaint.setTextSize(14 * density);
         mTextPaint.setTextAlign(Paint.Align.CENTER);
 
         mIndicatorPaint = new Paint();
         mIndicatorPaint.setDither(true);
         mIndicatorPaint.setAntiAlias(true);
-        mIndicatorPaint.setTextSize(10 * density);
+        mIndicatorPaint.setTextSize(getRawSize(TypedValue.COMPLEX_UNIT_SP, 12));
         mIndicatorPaint.setTextAlign(Paint.Align.CENTER);
 
         mBtnPaint = new Paint();
@@ -154,7 +156,7 @@ public class LyricView extends View {
                     break;
                 }
                 if(i == mCurrentPlayLine - 1) {
-                    mTextPaint.setColor(mCurrentPlayColor);
+                    mTextPaint.setColor(mHighLightColor);
                 } else {
                     if(mIndicatorShow && i == mCurrentShowLine - 1) {
                         mTextPaint.setColor(mCurrentShowColor);
@@ -174,7 +176,7 @@ public class LyricView extends View {
                 canvas.drawText(mLyricInfo.song_lines.get(i).content, x, y, mTextPaint);
             }
         } else {
-            mTextPaint.setColor(mCurrentPlayColor);
+            mTextPaint.setColor(mHintColor);
             canvas.drawText(mDefaultHint, getMeasuredWidth() * 0.5f, (getMeasuredHeight() + mLineHeight - 6) * 0.5f, mTextPaint);
         }
         /**
@@ -188,6 +190,7 @@ public class LyricView extends View {
 
     /**
      * 绘制左侧的播放按钮
+     * @param canvas
      * */
     private void drawPlayer(Canvas canvas) {
         mBtnBound = new Rect(mDefaultMargin, (int) (getMeasuredHeight() * 0.5f - mBtnWidth * 0.5f), mBtnWidth + mDefaultMargin, (int) (getMeasuredHeight() * 0.5f + mBtnWidth * 0.5f));
@@ -206,6 +209,7 @@ public class LyricView extends View {
 
     /**
      * 绘制指示器
+     * @param canvas
      * */
     private void drawIndicator(Canvas canvas) {
         mIndicatorPaint.setColor(mIndicatorColor);
@@ -278,6 +282,7 @@ public class LyricView extends View {
 
     /**
      * 手势取消执行事件
+     * @param event
      * */
     private void actionCancel(MotionEvent event) {
         releaseVelocityTracker();
@@ -285,6 +290,7 @@ public class LyricView extends View {
 
     /**
      * 手势按下执行事件
+     * @param event
      * */
     private void actionDown(MotionEvent event) {
         postman.removeMessages(MSG_PLAYER_SLIDE);
@@ -301,6 +307,7 @@ public class LyricView extends View {
 
     /**
      * 手势移动执行事件
+     * @param event
      * */
     private void actionMove(MotionEvent event) {
         if(scrollable()) {
@@ -370,6 +377,7 @@ public class LyricView extends View {
 
     /**
      * 设置用户是否触摸的标记
+     * @param isUserTouch  标记用户是否触摸屏幕
      * */
     private void setUserTouch(boolean isUserTouch) {
         if(mUserTouch == isUserTouch) {
@@ -394,6 +402,7 @@ public class LyricView extends View {
 
     /**
      * 滑行动画
+     * @param velocity  滑动速度
      * */
     private void doFlingAnimator(float velocity) {
         //注：     Math.abs(velocity)  < =  16000
@@ -446,8 +455,8 @@ public class LyricView extends View {
     }
 
     /**
-     * @param line
      * Input current showing line to measure the view's current scroll Y
+     * @param line  当前指定行号
      * */
     private float measureCurrentScrollY(int line) {
         return (line - 1) * mLineHeight;
@@ -455,6 +464,7 @@ public class LyricView extends View {
 
     /**
      * 判断当前点击事件是否落在播放按钮触摸区域范围内
+     * @param event  触摸事件
      * */
     private boolean clickPlayer(MotionEvent event) {
         if(mBtnBound != null &&  mDownX > (mBtnBound.left - mDefaultMargin) && mDownX < (mBtnBound.right + mDefaultMargin) && mDownY > (mBtnBound.top - mDefaultMargin) && mDownY < (mBtnBound.bottom + mDefaultMargin)) {
@@ -466,6 +476,7 @@ public class LyricView extends View {
 
     /**
      * 从当前位置滑动到指定位置上
+     * @param toY  指定纵坐标位置
      * */
     private void smoothScrollTo(float toY) {
         final ValueAnimator animator = ValueAnimator.ofFloat(mScrollY , toY);
@@ -677,7 +688,6 @@ public class LyricView extends View {
         String song_album;  // 专辑
 
         long song_offset;  // 偏移量
-
     }
 
     class LineInfo {
@@ -686,8 +696,31 @@ public class LyricView extends View {
     }
 
     public interface OnPlayerClickListener {
-        public void onPlayerClicked(long progress, String content);
+        void onPlayerClicked(long progress, String content);
     }
+
+    private void setRawTextSize(float size) {
+        if (size != mTextPaint.getTextSize()) {
+            mTextPaint.setTextSize(size);
+            measureLineHeight();
+            invalidateView();
+        }
+    }
+
+    private float getRawSize(int unit, float size) {
+        Context context = getContext();
+        Resources resources;
+        if (context == null) {
+            resources = Resources.getSystem();
+        } else {
+            resources = context.getResources();
+        }
+        return TypedValue.applyDimension(unit, size, resources.getDisplayMetrics());
+    }
+
+
+
+
 
 
     /**
@@ -737,5 +770,45 @@ public class LyricView extends View {
     public void reset(String message) {
         mDefaultHint = message;
         resetView();
+    }
+
+    /**
+     * 设置高亮显示文本的字体颜色
+     * @param color  颜色值
+     * */
+    public void setHighLightTextColor(int color) {
+        if(mHighLightColor != color) {
+            mHighLightColor = color;
+            invalidateView();
+        }
+    }
+
+    /**
+     * 设置歌词内容行间距
+     * @param lineSpace  行间距大小
+     * */
+    public void setLineSpace(float lineSpace) {
+        if(mLineSpace != lineSpace) {
+            mLineSpace = getRawSize(TypedValue.COMPLEX_UNIT_SP, lineSpace);
+            measureLineHeight();
+            invalidateView();
+        }
+    }
+
+    /**
+     * 设置歌词文本内容字体大小
+     * @param unit
+     * @param size
+     * */
+    public void setTextSize(int unit, float size) {
+        setRawTextSize(getRawSize(unit, size));
+    }
+
+    /**
+     * 设置歌词文本内容字体大小
+     * @param size
+     * */
+    public void setTextSize(float size) {
+        setTextSize(TypedValue.COMPLEX_UNIT_SP, size);
     }
 }

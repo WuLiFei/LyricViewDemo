@@ -12,6 +12,8 @@ import android.widget.TextView;
 import com.example.mariostudio.lyricviewdemo.Constant;
 import com.example.mariostudio.lyricviewdemo.R;
 
+import org.w3c.dom.Text;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -72,6 +74,8 @@ public class OtherActivity extends AppCompatActivity {
     }
 
     private void initAllDatum() {
+        TextView textView = new TextView(this);
+
         File file = new File(Constant.lyricPath + "一个人的北京 - 好妹妹乐队.lrc");
         if (file != null && file.exists()) {
             try {
