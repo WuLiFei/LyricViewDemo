@@ -1,59 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_height="wrap_content"
     android:layout_width="match_parent"
     android:orientation="vertical"
+    android:layout_height="240dp"
     tools:background="#CDCDCD" >
 
     <SeekBar
-        android:layout_marginTop="16dp"
+        android:max="100"
+        android:padding="16dp"
+        android:maxHeight="4dp"
+        android:minHeight="4dp"
+        android:layout_marginTop="12dp"
         android:layout_marginLeft="12dp"
+        android:id="@+id/seek_text_size"
         android:layout_marginRight="12dp"
-        android:layout_marginBottom="16dp"
-        android:progressDrawable="@drawable/layer_player_playing_progress"
-        android:thumb="@drawable/selector_player_playing_thumb"
-        android:id="@android:id/progress"
+        android:layout_marginBottom="6dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:maxHeight="2.0dip"
-        android:minHeight="2.0dip" />
+        android:thumb="@drawable/selector_player_playing_thumb"
+        android:progressDrawable="@drawable/layer_player_setting_seek_bar"  />
 
     <SeekBar
-        android:layout_marginTop="16dp"
+        android:max="100"
+        android:padding="16dp"
+        android:maxHeight="4dp"
+        android:minHeight="4dp"
+        android:layout_marginTop="6dp"
         android:layout_marginLeft="12dp"
+        android:id="@+id/seek_line_space"
         android:layout_marginRight="12dp"
-        android:layout_marginBottom="16dp"
-        android:progressDrawable="@drawable/layer_player_playing_progress"
-        android:thumb="@drawable/selector_player_playing_thumb"
-        android:id="@android:id/progress"
+        android:layout_marginBottom="12dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:maxHeight="2.0dip"
-        android:minHeight="2.0dip" />
+        android:thumb="@drawable/selector_player_playing_thumb"
+        android:progressDrawable="@drawable/layer_player_setting_seek_bar" />
 
     <HorizontalScrollView
+        android:scrollbars="none"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
 
         <LinearLayout
             android:padding="8dp"
+            android:id="@+id/layout_color"
             android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" >
 
             <View
                 android:background="#1269EF"
-                android:layout_width="64dp"
-                android:layout_height="64dp" />
+                android:layout_width="48dp"
+                android:layout_height="48dp" />
         </LinearLayout>
     </HorizontalScrollView>
 
+    <View
+        android:layout_width="match_parent"
+        android:background="#24969696"
+        android:layout_height="1px" />
+
     <TextView
-        android:textSize="16sp"
         android:text="关闭"
         android:padding="16dp"
+        android:textSize="16sp"
         android:gravity="center"
+        android:id="@+id/btn_dismiss"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 </LinearLayout>

@@ -2,12 +2,14 @@
 <com.example.mariostudio.lyricviewdemo.view.CustomRelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_height="match_parent"
-    android:layout_width="match_parent" >
+    android:layout_width="match_parent"
+    android:visibility="gone" >
 
     <com.example.mariostudio.lyricviewdemo.view.CustomSettingView
         android:layout_alignParentBottom="true"
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
         android:id="@+id/setting_view"
-        android:background="#DCECEDDE" />
+        android:background="#ECEDDE"
+        android:alpha="0.98" />
 </com.example.mariostudio.lyricviewdemo.view.CustomRelativeLayout>

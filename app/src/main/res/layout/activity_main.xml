@@ -51,9 +51,9 @@
                 android:text="暂无歌词" />
 
             <ImageView
-                android:visibility="gone"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:padding="6dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:layout_margin="12dp"
                 android:id="@+id/action_setting"
                 android:contentDescription="@null"
@@ -72,7 +72,7 @@
             <TextView
                 android:text="--:--"
                 android:padding="6dp"
-                android:gravity="left"
+                android:gravity="right"
                 android:textColor="#16BC5C"
                 android:id="@android:id/text1"
                 android:layout_width="wrap_content"
@@ -95,7 +95,7 @@
             <TextView
                 android:text="--:--"
                 android:padding="6dp"
-                android:gravity="right"
+                android:gravity="left"
                 android:textColor="#ECF0F1"
                 android:id="@android:id/text2"
                 android:layout_width="wrap_content"
@@ -122,7 +122,7 @@
                 android:layout_marginLeft="32dp"
                 android:layout_marginRight="32dp"
                 android:contentDescription="@null"
-                android:src="@mipmap/m_icon_player_pause_normal" />
+                android:src="@mipmap/m_icon_player_play_normal" />
 
             <ImageView
                 android:layout_width="32dp"

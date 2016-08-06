@@ -49,6 +49,8 @@ public class LyricView extends View {
 
     private int mLineCount;  // 行数
     private float mLineHeight;  // 行高
+    private int mIndicatorSpace;
+
     private float mScrollY = 0;  // 纵轴偏移量
     private float mVelocity = 0;  // 纵轴上的滑动速度
     private float mLineSpace = 0;  // 行间距（包含在行高中）
@@ -78,6 +80,7 @@ public class LyricView extends View {
     private final int MSG_PLAYER_HIDE = 0x157;
 
     private ValueAnimator mFlingAnimator;
+    private boolean mPlayable = false;
     private boolean mSliding = false;
 
     public LyricView(Context context) {
@@ -183,7 +186,9 @@ public class LyricView extends View {
          * 滑动提示部分内容绘制
          * */
         if(mIndicatorShow && scrollable()) {
-            drawPlayer(canvas);
+            if(mPlayable) {
+                drawPlayer(canvas);
+            }
             drawIndicator(canvas);
         }
     }
@@ -221,7 +226,7 @@ public class LyricView extends View {
         mIndicatorPaint.setStrokeWidth(2.0f);
         mIndicatorPaint.setStyle(Paint.Style.STROKE);
         mIndicatorPaint.setPathEffect(new DashPathEffect(new float[]{20, 10}, 0));
-        path.moveTo(mBtnBound.right + 36 , getMeasuredHeight() * 0.5f);
+        path.moveTo(mPlayable ? mBtnBound.right + 24 : 24 , getMeasuredHeight() * 0.5f);
         path.lineTo(getMeasuredWidth() - mTimerBound.width() - mTimerBound.width() - 36, getMeasuredHeight() * 0.5f);
         canvas.drawPath(path , mIndicatorPaint);
     }
@@ -810,5 +815,9 @@ public class LyricView extends View {
      * */
     public void setTextSize(float size) {
         setTextSize(TypedValue.COMPLEX_UNIT_SP, size);
+    }
+
+    public void setPlayable(boolean playable) {
+        mPlayable = playable;
     }
 }

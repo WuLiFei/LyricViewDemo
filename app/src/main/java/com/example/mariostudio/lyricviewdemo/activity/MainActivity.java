@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewStub;
 import android.view.Window;
@@ -59,6 +60,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private CustomRelativeLayout customRelativeLayout;
 
     private final int MSG_REFRESH = 0x167;
+    private final int MSG_LYRIC_SHOW = 0x187;
 
     private long animatorDuration = 120;
 
@@ -72,10 +74,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             setTranslucentStatus();
         }
 
-//        Intent intent = new Intent(this, OtherActivity.class);
-//        startActivity(intent);
-//        finish();
-//
         initAllViews();
         initAllDatum();
     }
@@ -132,35 +130,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * 准备
      * */
     private void mediaPlayerSetup() {
-        try {
-            mediaPlayer = new MediaPlayer();
-            setCurrentState(State.STATE_SETUP);
-            mediaPlayer.setOnPreparedListener(this);
-            mediaPlayer.setOnCompletionListener(this);
-            mediaPlayer.setOnBufferingUpdateListener(this);
-            mediaPlayer.setDataSource(song_urls[position]);
-            mediaPlayer.prepareAsync();
-            display_title.setText(song_names[position]);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        display_title.setText(song_names[position]);
+        setupHandler.removeMessages(MSG_LYRIC_SHOW);
+        setupHandler.sendEmptyMessageDelayed(MSG_LYRIC_SHOW, 800);
     }
 
     /**
      * 停止
      * */
-    private boolean stop() {
-        if(null != mediaPlayer && currentState != State.STATE_STOP) {
-            handler.removeMessages(MSG_REFRESH);
-            lyricView.reset("载入歌词ing...");
-            setCurrentState(State.STATE_STOP);
+    private void stop() {
+        if(null != mediaPlayer) {
             mediaPlayer.stop();
             mediaPlayer.release();
             mediaPlayer = null;
-            return true;
-        } else {
-            return false;
         }
+        handler.removeMessages(MSG_REFRESH);
+        lyricView.reset("载入歌词ing...");
+        setCurrentState(State.STATE_STOP);
     }
 
     /**
@@ -189,27 +175,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * 上一首
      * */
     private void previous() {
-        if(stop()) {
-            position --;
-            if(position < 0) {
-                position = Math.min(Math.min(song_names.length, song_lyrics.length), song_urls.length) - 1;
-            }
-            mediaPlayerSetup();
+        stop();
+        position --;
+        if(position < 0) {
+            position = Math.min(Math.min(song_names.length, song_lyrics.length), song_urls.length) - 1;
         }
+        mediaPlayerSetup();
     }
 
     /**
      * 上一首
      * */
     private void next() {
-        if(stop()) {
-            position ++;
-            if(position >= Math.min(Math.min(song_names.length, song_lyrics.length), song_urls.length)) {
-                position = 0;
-            }
-            mediaPlayerSetup();
+        stop();
+        position ++;
+        if(position >= Math.min(Math.min(song_names.length, song_lyrics.length), song_urls.length)) {
+            position = 0;
         }
+        mediaPlayerSetup();
     }
+
+    Handler setupHandler = new Handler() {
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            try {
+                setCurrentState(State.STATE_SETUP);
+                mediaPlayer = new MediaPlayer();
+                mediaPlayer.setOnPreparedListener(MainActivity.this);
+                mediaPlayer.setOnCompletionListener(MainActivity.this);
+                mediaPlayer.setOnBufferingUpdateListener(MainActivity.this);
+                mediaPlayer.setDataSource(song_urls[position]);
+                mediaPlayer.prepareAsync();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    };
 
     @Override
     public void onPrepared(MediaPlayer mediaPlayer) {
@@ -217,12 +220,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         DecimalFormat format = new DecimalFormat("00");
         display_seek.setMax(mediaPlayer.getDuration());
         display_total.setText(format.format(mediaPlayer.getDuration() / 1000 / 60) + ":" + format.format(mediaPlayer.getDuration() / 1000 % 60));
-        File file = new File(Constant.lyricPath + song_names[position] + ".lrc");
-        if(file.exists()) {
-            lyricView.setLyricFile(file, "GBK");
-        } else {
-            downloadLyric(song_lyrics[position], file);
-        }
         start();
     }
 
@@ -251,11 +248,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case STATE_PLAYING:
                 btnPlay.setImageResource(R.mipmap.m_icon_player_pause_normal);
                 break;
+            case STATE_PREPARE:
+                if(lyricView != null) {
+                    lyricView.setPlayable(true);
+                }
+                break;
             case STATE_STOP:
-                display_position.setText("00:00");
+                if(lyricView != null) {
+                    lyricView.setPlayable(false);
+                }
+                display_position.setText("--:--");
                 display_seek.setSecondaryProgress(0);
                 display_seek.setProgress(0);
                 display_seek.setMax(100);
+                break;
+            case STATE_SETUP:
+                File file = new File(Constant.lyricPath + song_names[position] + ".lrc");
+                if(file.exists()) {
+                    lyricView.setLyricFile(file, "GBK");
+                } else {
+                    downloadLyric(song_lyrics[position], file);
+                }
                 break;
             default:
                 break;
@@ -285,9 +298,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onPlayerClicked(long progress, String content) {
-        mediaPlayer.seekTo((int) progress);
-        if(currentState == State.STATE_PAUSE) {
-            start();
+        if(mediaPlayer != null && (currentState == State.STATE_PLAYING || currentState == State.STATE_PAUSE)) {
+            mediaPlayer.seekTo((int) progress);
+            if(currentState == State.STATE_PAUSE) {
+                start();
+            }
         }
     }
 
@@ -321,7 +336,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             @Override
             public void onFailure(HttpException e, String s) {
-
+                lyricView.setLyricFile(null, null);
             }
         });
     }
@@ -354,6 +369,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.action_setting:
                 if(customRelativeLayout == null) {
                     customRelativeLayout = (CustomRelativeLayout) setting_layout.inflate();
+                    initCustomSettingView();
                 }
                 customRelativeLayout.show();
                 break;
@@ -362,6 +378,72 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         press_animator = pressAnimator(view);
         press_animator.start();
+    }
+
+    private void initCustomSettingView() {
+        customSettingView = (CustomSettingView) customRelativeLayout.getChildAt(0);
+        customSettingView.setOnTextSizeChangeListener(new TextSizeChangeListener());
+        customSettingView.setOnColorItemChangeListener(new ColorItemClickListener());
+        customSettingView.setOnDismissBtnClickListener(new DismissBtnClickListener());
+        customSettingView.setOnLineSpaceChangeListener(new LineSpaceChangeListener());
+    }
+
+    private class TextSizeChangeListener implements SeekBar.OnSeekBarChangeListener {
+
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            if(fromUser) {
+                lyricView.setTextSize(15.0f + 3 * progress / 100.0f);
+            }
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+
+        }
+    }
+
+    private class LineSpaceChangeListener implements SeekBar.OnSeekBarChangeListener {
+
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            if(fromUser) {
+                lyricView.setLineSpace(12.0f + 3 * progress / 100.0f);
+            }
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+
+        }
+    }
+
+    private class DismissBtnClickListener implements View.OnClickListener {
+
+        @Override
+        public void onClick(View view) {
+            if(customRelativeLayout != null) {
+                customRelativeLayout.dismiss();
+            }
+        }
+    }
+
+    private class ColorItemClickListener implements CustomSettingView.OnColorItemChangeListener {
+
+        @Override
+        public void onColorChanged(int color) {
+            lyricView.setHighLightTextColor(color);
+        }
     }
 
     public ValueAnimator pressAnimator(final View view) {
