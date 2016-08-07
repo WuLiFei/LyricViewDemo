@@ -44,7 +44,7 @@ public class LyricView extends View {
     private int mHintColor = Color.parseColor("#FFFFFF");  // 提示语颜色
     private int mDefaultColor = Color.parseColor("#FFFFFF");  // 默认字体颜色
     private int mIndicatorColor = Color.parseColor("#EFEFEF");  // 指示器颜色
-    private int mHighLightColor = Color.parseColor("#7AC5CD");  // 当前播放位置的颜色
+    private int mHighLightColor = Color.parseColor("#4FC5C7");  // 当前播放位置的颜色
     private int mCurrentShowColor = Color.parseColor("#AAAAAA");  // 当前拖动位置的颜色
 
     private int mLineCount;  // 行数
@@ -71,7 +71,7 @@ public class LyricView extends View {
 
     private LyricInfo mLyricInfo;
     private String mDefaultTime = "00:00";
-    private String mDefaultHint = "暂无歌词";
+    private String mDefaultHint = "LyricView";
     private Paint mTextPaint, mBtnPaint, mIndicatorPaint;
 
     private OnPlayerClickListener mClickListener;
@@ -708,6 +708,7 @@ public class LyricView extends View {
         if (size != mTextPaint.getTextSize()) {
             mTextPaint.setTextSize(size);
             measureLineHeight();
+            mScrollY = measureCurrentScrollY(mCurrentPlayLine);
             invalidateView();
         }
     }
@@ -796,6 +797,7 @@ public class LyricView extends View {
         if(mLineSpace != lineSpace) {
             mLineSpace = getRawSize(TypedValue.COMPLEX_UNIT_SP, lineSpace);
             measureLineHeight();
+            mScrollY = measureCurrentScrollY(mCurrentPlayLine);
             invalidateView();
         }
     }

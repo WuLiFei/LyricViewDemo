@@ -14,6 +14,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.example.mariostudio.lyricviewdemo.R;
+import com.example.mariostudio.lyricviewdemo.util.PreferenceUtil;
 
 /**
  * Created by MarioStudio on 2016/8/1.
@@ -28,7 +29,7 @@ public class CustomSettingView extends LinearLayout {
 
     private OnColorItemChangeListener colorItemChangeListener;
 
-    private int colors[] = {Color.parseColor("#7AC5CD"), Color.parseColor("#363636"), Color.parseColor("#7AC5CD"), Color.parseColor("#7AC5CD"), Color.parseColor("#7AC5CD"), Color.parseColor("#7AC5CD"), Color.parseColor("#7AC5CD"), Color.parseColor("#7AC5CD"), Color.parseColor("#7AC5CD"), Color.parseColor("#7AC5CD")};
+    private int colors[] = {Color.parseColor("#4FC5C7"), Color.parseColor("#F55064"), Color.parseColor("#262A3B"), Color.parseColor("#F2572D"), Color.parseColor("#97EC71"), Color.parseColor("#0EA8E3"), Color.parseColor("#F29C9C"), Color.parseColor("#5B4947"), Color.parseColor("#EFC028"), Color.parseColor("#DE9DD6")};
 
     public CustomSettingView(Context context) {
         super(context);
@@ -59,6 +60,8 @@ public class CustomSettingView extends LinearLayout {
         mLineSpaceSeek = (SeekBar) findViewById(R.id.seek_line_space);
         mColorLayout = (LinearLayout) findViewById(R.id.layout_color);
 
+        mTextSizeSeek.setProgress((int) ((PreferenceUtil.getInstance(getContext()).getFloat(PreferenceUtil.KEY_TEXT_SIZE, 15.0f) - 15.0f) * 100 / 3.0f));
+        mLineSpaceSeek.setProgress((int) ((PreferenceUtil.getInstance(getContext()).getFloat(PreferenceUtil.KEY_TEXT_SIZE, 12.0f) - 12.0f) * 100 / 3.0f));
         initColorLayout();
     }
 

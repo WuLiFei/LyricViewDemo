@@ -4,13 +4,14 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewStub;
 import android.view.Window;
@@ -22,6 +23,7 @@ import android.widget.TextView;
 import com.example.mariostudio.lyricviewdemo.Constant;
 import com.example.mariostudio.lyricviewdemo.LyricView;
 import com.example.mariostudio.lyricviewdemo.R;
+import com.example.mariostudio.lyricviewdemo.util.PreferenceUtil;
 import com.example.mariostudio.lyricviewdemo.view.CustomRelativeLayout;
 import com.example.mariostudio.lyricviewdemo.view.CustomSettingView;
 import com.lidroid.xutils.HttpUtils;
@@ -60,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private CustomRelativeLayout customRelativeLayout;
 
     private final int MSG_REFRESH = 0x167;
+    private final int MSG_LOADING = 0x177;
     private final int MSG_LYRIC_SHOW = 0x187;
 
     private long animatorDuration = 120;
@@ -99,8 +102,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void initAllViews() {
         statueBar = findViewById(R.id.statue_bar);
         statueBar.getLayoutParams().height = getStatusBarHeight();
-        lyricView = (LyricView) findViewById(R.id.lyric_view);
-        lyricView.setOnPlayerClickListener(this);
         display_title = (TextView) findViewById(R.id.title_view);
         display_position = (TextView) findViewById(android.R.id.text1);
         display_total = (TextView) findViewById(android.R.id.text2);
@@ -114,6 +115,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnPlay.setOnClickListener(this);
         btnNext.setOnClickListener(this);
         btnPre.setOnClickListener(this);
+        lyricView = (LyricView) findViewById(R.id.lyric_view);
+        lyricView.setOnPlayerClickListener(this);
+        lyricView.setLineSpace(PreferenceUtil.getInstance(MainActivity.this).getFloat(PreferenceUtil.KEY_TEXT_SIZE, 12.0f));
+        lyricView.setTextSize(PreferenceUtil.getInstance(MainActivity.this).getFloat(PreferenceUtil.KEY_TEXT_SIZE, 15.0f));
+        lyricView.setHighLightTextColor(PreferenceUtil.getInstance(MainActivity.this).getInt(PreferenceUtil.KEY_HIGHLIGHT_COLOR, Color.parseColor("#4FC5C7")));
 
         setting_layout = (ViewStub) findViewById(R.id.main_setting_layout);
     }
@@ -131,8 +137,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * */
     private void mediaPlayerSetup() {
         display_title.setText(song_names[position]);
-        setupHandler.removeMessages(MSG_LYRIC_SHOW);
-        setupHandler.sendEmptyMessageDelayed(MSG_LYRIC_SHOW, 800);
+        handler.removeMessages(MSG_LYRIC_SHOW);
+        handler.sendEmptyMessageDelayed(MSG_LYRIC_SHOW, 420);
     }
 
     /**
@@ -195,25 +201,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mediaPlayerSetup();
     }
 
-    Handler setupHandler = new Handler() {
-
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            try {
-                setCurrentState(State.STATE_SETUP);
-                mediaPlayer = new MediaPlayer();
-                mediaPlayer.setOnPreparedListener(MainActivity.this);
-                mediaPlayer.setOnCompletionListener(MainActivity.this);
-                mediaPlayer.setOnBufferingUpdateListener(MainActivity.this);
-                mediaPlayer.setDataSource(song_urls[position]);
-                mediaPlayer.prepareAsync();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    };
-
     @Override
     public void onPrepared(MediaPlayer mediaPlayer) {
         setCurrentState(State.STATE_PREPARE);
@@ -252,6 +239,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if(lyricView != null) {
                     lyricView.setPlayable(true);
                 }
+                setLoading(false);
                 break;
             case STATE_STOP:
                 if(lyricView != null) {
@@ -261,6 +249,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 display_seek.setSecondaryProgress(0);
                 display_seek.setProgress(0);
                 display_seek.setMax(100);
+                btnPlay.setImageResource(R.mipmap.m_icon_player_play_normal);
+                setLoading(false);
                 break;
             case STATE_SETUP:
                 File file = new File(Constant.lyricPath + song_names[position] + ".lrc");
@@ -269,6 +259,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 } else {
                     downloadLyric(song_lyrics[position], file);
                 }
+                btnPlay.setImageResource(R.mipmap.m_icon_player_play_normal);
+                setLoading(true);
                 break;
             default:
                 break;
@@ -292,9 +284,51 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                     handler.sendEmptyMessageDelayed(MSG_REFRESH, 120);
                     break;
+                case MSG_LYRIC_SHOW:
+                    try {
+                        setCurrentState(State.STATE_SETUP);
+                        mediaPlayer = new MediaPlayer();
+                        mediaPlayer.setOnPreparedListener(MainActivity.this);
+                        mediaPlayer.setOnCompletionListener(MainActivity.this);
+                        mediaPlayer.setOnBufferingUpdateListener(MainActivity.this);
+                        mediaPlayer.setDataSource(song_urls[position]);
+                        mediaPlayer.prepareAsync();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case MSG_LOADING:
+                    Drawable background = btnPlay.getBackground();
+                    int level = background.getLevel();
+                    level = level + 300;
+                    if(level > 10000) {
+                        level = level - 10000;
+                    }
+                    background.setLevel(level);
+                    handler.sendEmptyMessageDelayed(MSG_LOADING, 50);
+                    break;
+                default:
+                    break;
             }
         }
     };
+
+    private boolean mLoading = false;
+
+    private void setLoading(boolean loading) {
+        if(loading && !mLoading) {
+            btnPlay.setBackgroundResource(R.drawable.rotate_player_loading);
+            handler.sendEmptyMessageDelayed(MSG_LOADING, 200);
+            mLoading = true;
+            return;
+        }
+        if (!loading && mLoading) {
+            handler.removeMessages(MSG_LOADING);
+            btnPlay.setBackgroundColor(Color.TRANSPARENT);
+            mLoading = false;
+            return;
+        }
+    }
 
     @Override
     public void onPlayerClicked(long progress, String content) {
@@ -404,7 +438,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
-
+            PreferenceUtil.getInstance(MainActivity.this).putFloat(PreferenceUtil.KEY_TEXT_SIZE, 15.0f + 3 * seekBar.getProgress() / 100.0f);
         }
     }
 
@@ -424,7 +458,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
-
+            PreferenceUtil.getInstance(MainActivity.this).putFloat(PreferenceUtil.KEY_LINE_SPACE, 12.0f + 3 * seekBar.getProgress() / 100.0f);
         }
     }
 
@@ -443,6 +477,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         public void onColorChanged(int color) {
             lyricView.setHighLightTextColor(color);
+            PreferenceUtil.getInstance(MainActivity.this).putInt(PreferenceUtil.KEY_HIGHLIGHT_COLOR, color);
+            if(customRelativeLayout != null) {
+                customRelativeLayout.dismiss();
+            }
         }
     }
 

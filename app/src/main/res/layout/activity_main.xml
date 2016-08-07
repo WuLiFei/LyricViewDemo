@@ -70,35 +70,39 @@
             android:layout_height="wrap_content" >
 
             <TextView
+                tools:text="02:01"
                 android:text="--:--"
                 android:padding="6dp"
-                android:gravity="right"
+                android:gravity="center"
                 android:textColor="#16BC5C"
+                android:layout_width="48dp"
                 android:id="@android:id/text1"
-                android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 
             <SeekBar
+                tools:max="100"
+                tools:progress="61"
+                android:maxHeight="2dp"
+                android:minHeight="2dp"
                 android:paddingTop="3dp"
-                android:paddingLeft="12dp"
-                android:paddingRight="12dp"
-                android:paddingBottom="3dp"
-                android:progressDrawable="@drawable/layer_player_playing_progress"
-                android:thumb="@drawable/selector_player_playing_thumb"
-                android:id="@android:id/progress"
-                android:layout_width="0dp"
+                android:paddingLeft="8dp"
                 android:layout_weight="1"
+                android:paddingRight="8dp"
+                android:layout_width="0dp"
+                android:paddingBottom="3dp"
+                android:id="@android:id/progress"
                 android:layout_height="wrap_content"
-                android:maxHeight="2.0dip"
-                android:minHeight="2.0dip" />
+                android:thumb="@drawable/selector_player_playing_thumb"
+                android:progressDrawable="@drawable/layer_player_playing_progress" />
 
             <TextView
+                tools:text="04:26"
                 android:text="--:--"
                 android:padding="6dp"
-                android:gravity="left"
+                android:gravity="center"
                 android:textColor="#ECF0F1"
+                android:layout_width="48dp"
                 android:id="@android:id/text2"
-                android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
         </LinearLayout>
 
@@ -118,11 +122,13 @@
             <ImageView
                 android:layout_width="42dp"
                 android:layout_height="42dp"
+                tools:background="#00969696"
                 android:id="@android:id/button2"
                 android:layout_marginLeft="32dp"
                 android:layout_marginRight="32dp"
                 android:contentDescription="@null"
-                android:src="@mipmap/m_icon_player_play_normal" />
+                android:src="@mipmap/m_icon_player_play_normal"
+                android:background="@drawable/rotate_player_loading" />
 
             <ImageView
                 android:layout_width="32dp"
